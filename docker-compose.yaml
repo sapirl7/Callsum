@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: callsum_app
+    volumes:
+      - .:/app
+      # Эта строка подключает "вечную флешку" для кэша моделей
+      - model_cache:/root/.cache
+    depends_on:
+      - ollama
+    env_file:
+      - .env
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+
+# Здесь мы объявляем наши "вечные флешки"
+volumes:
+  ollama_data:
+  model_cache:
