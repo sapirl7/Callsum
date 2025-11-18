@@ -1,0 +1,102 @@
+# IAM Roles и Policies для Lambda функций
+
+# IAM Role для Telegram Bot Lambda
+resource "aws_iam_role" "lambda_telegram_bot" {
+  name = "${local.project_name}-lambda-telegram-bot-${var.environment}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "Telegram Bot Lambda Role"
+  })
+}
+
+# Базовая политика для Lambda (CloudWatch Logs)
+resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
+  role       = aws_iam_role.lambda_telegram_bot.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Кастомная политика для доступа к AWS сервисам
+resource "aws_iam_role_policy" "lambda_telegram_bot_policy" {
+  name = "${local.project_name}-lambda-telegram-bot-policy"
+  role = aws_iam_role.lambda_telegram_bot.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      # S3 доступ
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject",
+          "s3:PutObjectAcl"
+        ]
+        Resource = "${aws_s3_bucket.callsum_storage.arn}/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = aws_s3_bucket.callsum_storage.arn
+      },
+      # SQS доступ
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage",
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+        Resource = aws_sqs_queue.callsum_jobs.arn
+      },
+      # DynamoDB доступ
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = [
+          aws_dynamodb_table.callsum_jobs.arn,
+          "${aws_dynamodb_table.callsum_jobs.arn}/index/*"
+        ]
+      },
+      # Secrets Manager доступ
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = [
+          aws_secretsmanager_secret.telegram_bot_token.arn,
+          aws_secretsmanager_secret.runpod_api_key.arn
+        ]
+      }
+    ]
+  })
+}
+
+# Outputs
+output "lambda_role_arn" {
+  description = "ARN IAM роли для Lambda"
+  value       = aws_iam_role.lambda_telegram_bot.arn
+}

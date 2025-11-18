@@ -50,7 +50,106 @@ print(f"Подключаемся к Ollama по адресу: {ollama_host}")
 ollama_client = ollama.Client(host=ollama_host)
 
 
-# --- 2. ОСНОВНАЯ ФУНКЦИЯ ОБРАБОТКИ ---
+# --- 2. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+
+def align_speakers_with_words(diarization, words):
+    """
+    Сопоставляет слова со спикерами на основе временных меток.
+
+    Args:
+        diarization: результат работы pyannote (диаризация)
+        words: список словарей с ключами 'text', 'start', 'end'
+
+    Returns:
+        list: список словарей с разметкой спикеров
+    """
+    dialogue = []
+
+    for word in words:
+        word_start = word['start']
+        word_end = word['end']
+        word_mid = (word_start + word_end) / 2  # Середина слова
+
+        # Ищем спикера для этого временного отрезка
+        speaker_found = None
+        for turn, _, speaker in diarization.itertracks(yield_label=True):
+            # Проверяем попадание середины слова в сегмент спикера
+            if turn.start <= word_mid <= turn.end:
+                speaker_found = speaker
+                break
+
+        dialogue.append({
+            'speaker': speaker_found or 'UNKNOWN',
+            'text': word['text'],
+            'start': word_start,
+            'end': word_end
+        })
+
+    return dialogue
+
+
+def format_dialogue_for_llm(dialogue):
+    """
+    Форматирует диалог в удобный для LLM формат с группировкой по репликам.
+
+    Args:
+        dialogue: список словарей с ключами 'speaker', 'text', 'start', 'end'
+
+    Returns:
+        str: отформатированный текст диалога
+    """
+    if not dialogue:
+        return ""
+
+    # Группируем последовательные слова одного спикера в реплики
+    grouped_dialogue = []
+    current_speaker = None
+    current_text = []
+    current_start = None
+
+    for item in dialogue:
+        if item['speaker'] != current_speaker:
+            # Сохраняем предыдущую реплику
+            if current_speaker is not None:
+                grouped_dialogue.append({
+                    'speaker': current_speaker,
+                    'text': ' '.join(current_text),
+                    'start': current_start
+                })
+
+            # Начинаем новую реплику
+            current_speaker = item['speaker']
+            current_text = [item['text']]
+            current_start = item['start']
+        else:
+            # Продолжаем текущую реплику
+            current_text.append(item['text'])
+
+    # Добавляем последнюю реплику
+    if current_speaker is not None:
+        grouped_dialogue.append({
+            'speaker': current_speaker,
+            'text': ' '.join(current_text),
+            'start': current_start
+        })
+
+    # Форматируем в текст
+    formatted_lines = []
+    for i, item in enumerate(grouped_dialogue):
+        timestamp = format_timestamp(item['start'])
+        formatted_lines.append(f"[{item['speaker']}, {timestamp}]: {item['text']}")
+
+    return "\n\n".join(formatted_lines)
+
+
+def format_timestamp(seconds):
+    """Форматирует секунды в MM:SS"""
+    minutes = int(seconds // 60)
+    secs = int(seconds % 60)
+    return f"{minutes:02d}:{secs:02d}"
+
+
+# --- 3. ОСНОВНАЯ ФУНКЦИЯ ОБРАБОТКИ ---
 
 def process_audio_file(audio_path: str) -> dict:
     """
@@ -75,13 +174,23 @@ def process_audio_file(audio_path: str) -> dict:
 
     # --- Шаг 3: Сбор-ка ди-а-ло-га ---
     print("3/3: Сборка диалога...")
-    # Логика сопоставления слов и спикеров
-    # (может быть сложной и требовать итеративной доработки)
-    
-    # ... (здесь будет сложная логика сопоставления, пока делаем упрощенно)
-    
-    full_text = " ".join([seg.text for seg in segments])
-    dialogue_text_for_llm = f"Проанализируй следующий текст:\n\n{full_text}"
+
+    # Собираем все слова с временными метками
+    all_words = []
+    for seg in segments:
+        if hasattr(seg, 'words') and seg.words:
+            for word in seg.words:
+                all_words.append({
+                    'text': word.word,
+                    'start': word.start,
+                    'end': word.end
+                })
+
+    # Сопоставляем слова со спикерами
+    dialogue = align_speakers_with_words(diarization, all_words)
+
+    # Формируем текст с разметкой спикеров для LLM
+    dialogue_text_for_llm = format_dialogue_for_llm(dialogue)
     
     
     # --- Шаг 4: Ана-лиз LLM ---
