@@ -64,3 +64,21 @@ variable "alert_email" {
   type        = string
   default     = ""
 }
+
+variable "monthly_budget_limit" {
+  description = "Месячный лимит расходов в USD"
+  type        = number
+  default     = 25
+}
+
+variable "runpod_monthly_limit" {
+  description = "Месячный лимит для RunPod в USD"
+  type        = number
+  default     = 15
+}
+
+variable "enable_cost_tracking" {
+  description = "Включить детальное отслеживание расходов"
+  type        = bool
+  default     = true
+}

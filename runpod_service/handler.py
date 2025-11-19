@@ -202,31 +202,79 @@ def upload_to_s3(bucket, key, data):
     logger.info("Результат загружен ✓")
 
 
+# === PROGRESS UPDATES ===
+
+def send_progress_update(callback_url: str, job_id: str, chat_id: str, progress: int, message: str):
+    """Отправляет промежуточное обновление прогресса."""
+    if not callback_url or not chat_id:
+        return
+
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            client.post(
+                callback_url,
+                json={
+                    'job_id': job_id,
+                    'chat_id': chat_id,
+                    'status': 'PROGRESS',
+                    'progress': progress,
+                    'message': message
+                }
+            )
+        logger.info(f"Progress update sent: {progress}% - {message}")
+    except Exception as e:
+        logger.warning(f"Failed to send progress update: {e}")
+
+
 # === ОСНОВНОЙ ОБРАБОТЧИК ===
 
 def handler(job):
     """
     Главная функция обработки задачи.
     Вызывается RunPod serverless при получении задачи.
+    Использует presigned URLs вместо AWS credentials для безопасности.
     """
     job_input = job['input']
 
     job_id = job_input['job_id']
-    s3_bucket = job_input['s3_bucket']
-    s3_key = job_input['s3_key']
     user_id = job_input.get('user_id')
     chat_id = job_input.get('chat_id')
+    callback_url = job_input.get('callback_url')
+
+    # Presigned URLs (если доступны) или fallback на старый метод
+    audio_download_url = job_input.get('audio_download_url')
+    result_upload_url = job_input.get('result_upload_url')
+    result_key = job_input.get('result_key')
+
+    # Fallback для обратной совместимости
+    s3_bucket = job_input.get('s3_bucket')
+    s3_key = job_input.get('s3_key')
 
     logger.info(f"Начало обработки задачи {job_id}")
 
     try:
-        # 1. Скачиваем аудио из S3
+        # 1. Скачиваем аудио
+        send_progress_update(callback_url, job_id, chat_id, 10, "📥 Скачивание аудио...")
+
         with tempfile.NamedTemporaryFile(suffix='.ogg', delete=False) as tmp_audio:
             audio_path = tmp_audio.name
 
-        download_from_s3(s3_bucket, s3_key, audio_path)
+        if audio_download_url:
+            # Используем presigned URL (безопасный способ)
+            logger.info("Скачивание аудио через presigned URL...")
+            with httpx.Client(timeout=300.0) as client:
+                response = client.get(audio_download_url)
+                response.raise_for_status()
+                with open(audio_path, 'wb') as f:
+                    f.write(response.content)
+            logger.info("Аудио скачано через presigned URL ✓")
+        else:
+            # Fallback: используем AWS credentials (legacy)
+            logger.warning("Используется legacy метод с AWS credentials")
+            download_from_s3(s3_bucket, s3_key, audio_path)
 
         # 2. Транскрипция (параллельно с диаризацией)
+        send_progress_update(callback_url, job_id, chat_id, 20, "🎙 Транскрибирую речь...")
         logger.info("Шаг 1/3: Транскрипция...")
 
         segments, info = whisper_model.transcribe(
@@ -249,6 +297,7 @@ def handler(job):
         logger.info(f"Транскрибировано {len(all_words)} слов")
 
         # 3. Диаризация
+        send_progress_update(callback_url, job_id, chat_id, 50, "👥 Определяю спикеров...")
         logger.info("Шаг 2/3: Определение спикеров...")
 
         diarization = diarization_pipeline(audio_path)
@@ -268,58 +317,91 @@ def handler(job):
 
         logger.info(f"Диалог сформирован, длина: {len(dialogue_text)} символов")
 
-        # 5. Генерация саммари через Llama
+        # 5. Генерация саммари через Llama (с graceful degradation)
+        send_progress_update(callback_url, job_id, chat_id, 70, "🤖 Генерирую саммари...")
         logger.info("Шаг 3/3: Генерация саммари...")
 
-        prompt = f"{SYSTEM_PROMPT}\n\nТранскрипция встречи:\n\n{dialogue_text}\n\nJSON:"
+        summary = None
+        llm_error = None
 
-        sampling_params = SamplingParams(
-            temperature=0.3,
-            top_p=0.9,
-            max_tokens=3000
-        )
-
-        outputs = llm.generate([prompt], sampling_params)
-        summary_text = outputs[0].outputs[0].text
-
-        # Парсим JSON
         try:
-            summary = json.loads(summary_text)
-            logger.info("Саммари успешно создано ✓")
-        except json.JSONDecodeError:
-            logger.warning("Не удалось распарсить JSON от LLM, используем fallback")
-            summary = {
-                "error": "Failed to parse LLM output",
-                "raw_output": summary_text
-            }
+            prompt = f"{SYSTEM_PROMPT}\n\nТранскрипция встречи:\n\n{dialogue_text}\n\nJSON:"
+
+            sampling_params = SamplingParams(
+                temperature=0.3,
+                top_p=0.9,
+                max_tokens=3000
+            )
+
+            outputs = llm.generate([prompt], sampling_params)
+            summary_text = outputs[0].outputs[0].text
+
+            # Парсим JSON
+            try:
+                summary = json.loads(summary_text)
+                logger.info("Саммари успешно создано ✓")
+            except json.JSONDecodeError as e:
+                logger.warning(f"Не удалось распарсить JSON от LLM: {e}")
+                llm_error = f"JSON parsing failed: {str(e)}"
+                summary = None
+
+        except Exception as e:
+            # Graceful degradation: LLM упал, но мы вернем хотя бы транскрипцию
+            logger.error(f"Ошибка генерации LLM саммари: {e}", exc_info=True)
+            llm_error = f"LLM generation failed: {str(e)}"
+            summary = None
 
         # 6. Формируем финальный результат
         result = {
             "job_id": job_id,
             "status": "completed",
             "full_transcript": dialogue_text,
-            "discussed": summary.get("discussed"),
-            "tasks": summary.get("tasks"),
+            "discussed": summary.get("discussed") if summary else None,
+            "tasks": summary.get("tasks") if summary else None,
             "metadata": {
                 "duration": info.duration if hasattr(info, 'duration') else None,
                 "language": info.language if hasattr(info, 'language') else "ru",
                 "num_speakers": len(speakers),
-                "num_words": len(all_words)
+                "num_words": len(all_words),
+                "llm_error": llm_error  # Добавляем информацию об ошибке LLM (если была)
             }
         }
 
-        # 7. Сохраняем результат в S3
-        result_key = f"users/{user_id}/results/{job_id}.json"
-        upload_to_s3(s3_bucket, result_key, result)
+        # Если LLM упал, добавляем предупреждение в результат
+        if llm_error:
+            result["warning"] = "Summary generation failed, but transcript is available"
+            logger.warning(f"Задача {job_id} завершена с предупреждением: LLM failed")
 
-        # 8. Перемещаем аудио в processed
-        processed_key = s3_key.replace('/new/', '/processed/')
-        s3_client.copy_object(
-            Bucket=s3_bucket,
-            CopySource={'Bucket': s3_bucket, 'Key': s3_key},
-            Key=processed_key
-        )
-        s3_client.delete_object(Bucket=s3_bucket, Key=s3_key)
+        # 7. Сохраняем результат в S3
+        if result_upload_url and result_key:
+            # Используем presigned URL (безопасный способ)
+            logger.info("Загрузка результата через presigned URL...")
+            with httpx.Client(timeout=60.0) as client:
+                response = client.put(
+                    result_upload_url,
+                    data=json.dumps(result).encode('utf-8'),
+                    headers={'Content-Type': 'application/json'}
+                )
+                response.raise_for_status()
+            logger.info("Результат загружен через presigned URL ✓")
+        else:
+            # Fallback: используем AWS credentials (legacy)
+            logger.warning("Используется legacy метод для загрузки результата")
+            if not result_key:
+                result_key = f"users/{user_id}/results/{job_id}.json"
+            upload_to_s3(s3_bucket, result_key, result)
+
+        # 8. Перемещаем аудио в processed (только если используем AWS credentials)
+        if s3_bucket and s3_key and not audio_download_url:
+            # Это legacy path - с presigned URLs аудио остается в /new/
+            processed_key = s3_key.replace('/new/', '/processed/')
+            s3_client.copy_object(
+                Bucket=s3_bucket,
+                CopySource={'Bucket': s3_bucket, 'Key': s3_key},
+                Key=processed_key
+            )
+            s3_client.delete_object(Bucket=s3_bucket, Key=s3_key)
+            logger.info("Аудио перемещено в processed/")
 
         # 9. Отправляем callback (опционально)
         callback_url = job_input.get('callback_url')

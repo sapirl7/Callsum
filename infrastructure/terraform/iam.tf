@@ -77,7 +77,8 @@ resource "aws_iam_role_policy" "lambda_telegram_bot_policy" {
         ]
         Resource = [
           aws_dynamodb_table.callsum_jobs.arn,
-          "${aws_dynamodb_table.callsum_jobs.arn}/index/*"
+          "${aws_dynamodb_table.callsum_jobs.arn}/index/*",
+          aws_dynamodb_table.rate_limits.arn
         ]
       },
       # Secrets Manager доступ

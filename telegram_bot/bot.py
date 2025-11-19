@@ -18,6 +18,18 @@ import asyncio
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# Поддерживаемые аудио форматы
+SUPPORTED_AUDIO_FORMATS = {
+    'audio/ogg',
+    'audio/mpeg',
+    'audio/mp3',
+    'audio/mp4',
+    'audio/m4a',
+    'audio/wav',
+    'audio/x-wav',
+    'audio/webm'
+}
+
 # AWS клиенты
 s3_client = boto3.client('s3')
 sqs_client = boto3.client('sqs')
@@ -28,6 +40,7 @@ dynamodb = boto3.resource('dynamodb')
 S3_BUCKET = os.getenv('S3_BUCKET_NAME', 'callsum-prod')
 SQS_QUEUE_URL = os.getenv('SQS_QUEUE_URL')
 DYNAMODB_TABLE = os.getenv('DYNAMODB_TABLE_NAME', 'callsum-jobs')
+RATE_LIMITS_TABLE = os.getenv('RATE_LIMITS_TABLE_NAME', 'callsum-jobs-rate-limits')
 RUNPOD_ENDPOINT = os.getenv('RUNPOD_ENDPOINT_URL')
 
 # Application configuration
@@ -42,8 +55,9 @@ RETRY_MIN_WAIT = int(os.getenv('RETRY_MIN_WAIT_SECONDS', '2'))
 RETRY_MAX_WAIT = int(os.getenv('RETRY_MAX_WAIT_SECONDS', '10'))
 TELEGRAM_MAX_MESSAGE_LENGTH = int(os.getenv('TELEGRAM_MAX_MESSAGE_LENGTH', '4000'))
 
-# Таблица DynamoDB
+# Таблицы DynamoDB
 jobs_table = dynamodb.Table(DYNAMODB_TABLE)
+rate_limits_table = dynamodb.Table(RATE_LIMITS_TABLE)
 
 
 def get_secret(secret_arn: str, key: str, fallback_env_var: str = None):
@@ -99,6 +113,96 @@ def estimate_processing_time(duration_seconds: int) -> int:
     return max(1, int(duration_seconds / 60 * 0.33))
 
 
+def check_rate_limit(user_id: int) -> dict:
+    """
+    Проверяет rate limit для пользователя.
+
+    Returns:
+        dict: {'allowed': bool, 'reset_in': int (seconds), 'message': str}
+    """
+    try:
+        now = datetime.utcnow()
+        current_hour = int(now.timestamp() // 3600) * 3600
+        current_day = int(now.replace(hour=0, minute=0, second=0).timestamp())
+
+        # Проверяем hourly limit
+        try:
+            hour_response = rate_limits_table.get_item(
+                Key={'user_id': user_id, 'window_start': current_hour}
+            )
+            hour_count = hour_response.get('Item', {}).get('count', 0)
+
+            if hour_count >= FREE_TIER_REQUESTS_PER_HOUR:
+                reset_in = 3600 - (int(now.timestamp()) - current_hour)
+                return {
+                    'allowed': False,
+                    'reset_in': reset_in,
+                    'message': f"⏱ Превышен лимит запросов в час ({FREE_TIER_REQUESTS_PER_HOUR}/час).\nПопробуйте через {reset_in // 60} мин."
+                }
+        except Exception as e:
+            logger.warning(f"Error checking hourly limit: {e}")
+
+        # Проверяем daily limit
+        try:
+            day_response = rate_limits_table.get_item(
+                Key={'user_id': user_id, 'window_start': current_day}
+            )
+            day_count = day_response.get('Item', {}).get('count', 0)
+
+            if day_count >= FREE_TIER_REQUESTS_PER_DAY:
+                reset_in = 86400 - (int(now.timestamp()) - current_day)
+                return {
+                    'allowed': False,
+                    'reset_in': reset_in,
+                    'message': f"⏱ Превышен дневной лимит ({FREE_TIER_REQUESTS_PER_DAY}/день).\nПопробуйте завтра."
+                }
+        except Exception as e:
+            logger.warning(f"Error checking daily limit: {e}")
+
+        return {'allowed': True, 'reset_in': 0, 'message': ''}
+
+    except Exception as e:
+        logger.error(f"Rate limit check error: {e}")
+        # В случае ошибки разрешаем (fail open)
+        return {'allowed': True, 'reset_in': 0, 'message': ''}
+
+
+def increment_rate_limit(user_id: int):
+    """Инкрементирует счетчик запросов для пользователя."""
+    try:
+        now = datetime.utcnow()
+        current_hour = int(now.timestamp() // 3600) * 3600
+        current_day = int(now.replace(hour=0, minute=0, second=0).timestamp())
+
+        # TTL = через 25 часов (чтобы точно покрыть весь день)
+        ttl = int(now.timestamp()) + 90000
+
+        # Инкремент hourly counter
+        try:
+            rate_limits_table.update_item(
+                Key={'user_id': user_id, 'window_start': current_hour},
+                UpdateExpression='ADD #count :inc SET #ttl = :ttl',
+                ExpressionAttributeNames={'#count': 'count', '#ttl': 'ttl'},
+                ExpressionAttributeValues={':inc': 1, ':ttl': ttl}
+            )
+        except Exception as e:
+            logger.error(f"Error incrementing hourly counter: {e}")
+
+        # Инкремент daily counter
+        try:
+            rate_limits_table.update_item(
+                Key={'user_id': user_id, 'window_start': current_day},
+                UpdateExpression='ADD #count :inc SET #ttl = :ttl',
+                ExpressionAttributeNames={'#count': 'count', '#ttl': 'ttl'},
+                ExpressionAttributeValues={':inc': 1, ':ttl': ttl}
+            )
+        except Exception as e:
+            logger.error(f"Error incrementing daily counter: {e}")
+
+    except Exception as e:
+        logger.error(f"Rate limit increment error: {e}")
+
+
 def create_job_record(job_id: str, user_id: int, s3_key: str, duration: int):
     """Создает запись о задаче в DynamoDB"""
     try:
@@ -140,11 +244,56 @@ def update_job_status(job_id: str, status: str, progress: int = None):
         logger.error(f"Ошибка обновления статуса: {e}")
 
 
+def generate_presigned_urls(s3_key: str, job_id: str, user_id: int) -> dict:
+    """
+    Генерирует presigned URLs для S3 операций.
+    Безопаснее чем отправлять AWS credentials в RunPod.
+
+    Returns:
+        dict: {'download_url': str, 'upload_url': str}
+    """
+    try:
+        # URL для скачивания аудио (действителен 1 час)
+        download_url = s3_client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': S3_BUCKET, 'Key': s3_key},
+            ExpiresIn=3600
+        )
+
+        # URL для загрузки результата (действителен 1 час)
+        result_key = f"users/{user_id}/results/{job_id}.json"
+        upload_url = s3_client.generate_presigned_url(
+            'put_object',
+            Params={
+                'Bucket': S3_BUCKET,
+                'Key': result_key,
+                'ServerSideEncryption': 'AES256'
+            },
+            ExpiresIn=3600
+        )
+
+        return {
+            'download_url': download_url,
+            'upload_url': upload_url,
+            'result_key': result_key
+        }
+    except Exception as e:
+        logger.error(f"Error generating presigned URLs: {e}")
+        return None
+
+
 async def trigger_runpod(job_id: str, s3_key: str, user_id: int, chat_id: int):
     """
     Пробуждает RunPod serverless endpoint для обработки.
     Использует retry с exponential backoff.
+    Использует presigned URLs вместо AWS credentials.
     """
+    # Генерируем presigned URLs
+    presigned_urls = generate_presigned_urls(s3_key, job_id, user_id)
+    if not presigned_urls:
+        logger.error(f"Failed to generate presigned URLs for job {job_id}")
+        return None
+
     for attempt in range(MAX_RETRIES):
         try:
             wait_time = min(
@@ -164,6 +313,9 @@ async def trigger_runpod(job_id: str, s3_key: str, user_id: int, chat_id: int):
                             'job_id': job_id,
                             's3_bucket': S3_BUCKET,
                             's3_key': s3_key,
+                            'audio_download_url': presigned_urls['download_url'],
+                            'result_upload_url': presigned_urls['upload_url'],
+                            'result_key': presigned_urls['result_key'],
                             'user_id': str(user_id),
                             'chat_id': str(chat_id),
                             'callback_url': os.getenv('CALLBACK_URL')  # Для webhook результатов
@@ -251,6 +403,13 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     voice = update.message.voice
 
+    # Проверка rate limit
+    rate_limit_check = check_rate_limit(user_id)
+    if not rate_limit_check['allowed']:
+        await update.message.reply_text(rate_limit_check['message'])
+        logger.warning(f"Rate limit exceeded for user {user_id}")
+        return
+
     # Проверка длительности
     if voice.duration > MAX_AUDIO_DURATION:
         await update.message.reply_text(
@@ -317,6 +476,9 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # 3. Создаем запись в DynamoDB
         create_job_record(job_id, user_id, s3_key, voice.duration)
+
+        # 3.1 Инкрементируем rate limit (после успешного создания задачи)
+        increment_rate_limit(user_id)
 
         # 4. Отправляем задачу в SQS
         sqs_client.send_message(
@@ -574,6 +736,20 @@ async def handle_runpod_callback(callback_data: dict):
                     chat_id=int(chat_id),
                     text="❌ Обработка завершилась с ошибкой. Результаты не получены."
                 )
+        elif status == 'PROGRESS':
+            # Промежуточное обновление прогресса
+            progress = callback_data.get('progress', 0)
+            message = callback_data.get('message', '')
+            update_job_status(job_id, 'processing', progress)
+
+            # Отправляем уведомление пользователю (опционально, чтобы не спамить)
+            if progress in [20, 50, 70]:  # Только на ключевых этапах
+                await bot.send_message(
+                    chat_id=int(chat_id),
+                    text=f"⏳ {message}\n\nПрогресс: {progress}%"
+                )
+            logger.info(f"Progress update for job {job_id}: {progress}% - {message}")
+
         elif status == 'FAILED':
             error_msg = callback_data.get('error', 'Unknown error')
             update_job_status(job_id, 'failed')

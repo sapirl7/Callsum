@@ -1,24 +1,47 @@
-# Terraform Variables - пример конфигурации
-# Скопируйте этот файл в terraform.tfvars и заполните своими значениями
+# Terraform Variables Example
+# Скопируйте этот файл в terraform.tfvars и заполните значения
 
-# AWS конфигурация
-aws_region  = "us-east-1"  # Регион AWS
-environment = "prod"        # dev, staging, или prod
+# === ОБЯЗАТЕЛЬНЫЕ ПАРАМЕТРЫ ===
 
-# Telegram Bot
-telegram_bot_token = "YOUR_TELEGRAM_BOT_TOKEN_HERE"  # Получите у @BotFather
+# Telegram Bot Token (получите у @BotFather)
+telegram_bot_token = "YOUR_TELEGRAM_BOT_TOKEN"
 
-# Hugging Face
-hf_token = "YOUR_HUGGING_FACE_TOKEN_HERE"  # Получите на huggingface.co/settings/tokens
+# Hugging Face Token (для Pyannote модели)
+# Получите на https://huggingface.co/settings/tokens
+hf_token = "YOUR_HF_TOKEN"
 
-# RunPod
-runpod_api_key      = "YOUR_RUNPOD_API_KEY_HERE"       # API key из RunPod dashboard
-runpod_endpoint_url = "https://api.runpod.ai/v2/YOUR_ENDPOINT_ID/run"  # URL после деплоя
+# RunPod API Key
+# Получите на https://www.runpod.io/console/user/settings
+runpod_api_key = "YOUR_RUNPOD_API_KEY"
 
-# S3 и DynamoDB
-s3_bucket_name      = "callsum-prod"  # Имя должно быть глобально уникальным
-dynamodb_table_name = "callsum-jobs"
+# RunPod Endpoint URL (создается после деплоя RunPod сервиса)
+# Формат: https://api.runpod.ai/v2/{endpoint_id}
+runpod_endpoint_url = "https://api.runpod.ai/v2/YOUR_ENDPOINT_ID"
+
+# === ОПЦИОНАЛЬНЫЕ ПАРАМЕТРЫ ===
+
+# AWS Region
+aws_region = "us-east-1"
+
+# Environment (dev, staging, prod)
+environment = "prod"
+
+# S3 Bucket Name (должно быть уникальным глобально)
+s3_bucket_name = "callsum-prod-your-unique-suffix"
+
+# Email для алертов (оставьте пустым если не нужны email уведомления)
+alert_email = "your@email.com"
+
+# Бюджетные лимиты (USD)
+monthly_budget_limit = 25  # Общий месячный лимит
+runpod_monthly_limit = 15  # Лимит для RunPod
+
+# Включить детальное отслеживание расходов
+enable_cost_tracking = true
 
 # Lambda конфигурация
-lambda_timeout = 60   # Секунды
-lambda_memory  = 512  # MB
+lambda_timeout = 60      # секунд
+lambda_memory  = 512     # MB
+
+# DynamoDB таблица для jobs
+dynamodb_table_name = "callsum-jobs"
