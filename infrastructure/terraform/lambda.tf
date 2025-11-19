@@ -29,11 +29,12 @@ resource "aws_lambda_function" "telegram_bot" {
   environment {
     variables = {
       # AWS Resources
-      S3_BUCKET_NAME      = aws_s3_bucket.callsum_storage.id
-      SQS_QUEUE_URL       = aws_sqs_queue.callsum_jobs.url
-      DYNAMODB_TABLE_NAME = aws_dynamodb_table.callsum_jobs.name
-      AWS_REGION          = var.aws_region
-      ENVIRONMENT         = var.environment
+      S3_BUCKET_NAME           = aws_s3_bucket.callsum_storage.id
+      SQS_QUEUE_URL            = aws_sqs_queue.callsum_jobs.url
+      DYNAMODB_TABLE_NAME      = aws_dynamodb_table.callsum_jobs.name
+      RATE_LIMITS_TABLE_NAME   = aws_dynamodb_table.rate_limits.name
+      AWS_REGION               = var.aws_region
+      ENVIRONMENT              = var.environment
 
       # Secrets Manager ARNs (Lambda fetches actual values)
       TELEGRAM_BOT_TOKEN_SECRET_ARN = aws_secretsmanager_secret.telegram_bot_token.arn
