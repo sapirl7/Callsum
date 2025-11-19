@@ -1,0 +1,24 @@
+# Terraform Variables - пример конфигурации
+# Скопируйте этот файл в terraform.tfvars и заполните своими значениями
+
+# AWS конфигурация
+aws_region  = "us-east-1"  # Регион AWS
+environment = "prod"        # dev, staging, или prod
+
+# Telegram Bot
+telegram_bot_token = "YOUR_TELEGRAM_BOT_TOKEN_HERE"  # Получите у @BotFather
+
+# Hugging Face
+hf_token = "YOUR_HUGGING_FACE_TOKEN_HERE"  # Получите на huggingface.co/settings/tokens
+
+# RunPod
+runpod_api_key      = "YOUR_RUNPOD_API_KEY_HERE"       # API key из RunPod dashboard
+runpod_endpoint_url = "https://api.runpod.ai/v2/YOUR_ENDPOINT_ID/run"  # URL после деплоя
+
+# S3 и DynamoDB
+s3_bucket_name      = "callsum-prod"  # Имя должно быть глобально уникальным
+dynamodb_table_name = "callsum-jobs"
+
+# Lambda конфигурация
+lambda_timeout = 60   # Секунды
+lambda_memory  = 512  # MB
