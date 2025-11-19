@@ -13,6 +13,17 @@ __pycache__/
 
 # Базы данных и результаты работы
 *.db
-*.json
-*.txt
-*.sh
+
+# Игнорируем только результаты обработки, НЕ конфиги
+structured_summary.json
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.tfstate.lock.info
+
+# Игнорируем логи, НЕ requirements
+*.log
+
+# Terraform
+.terraform/
+*.tfvars
+!*.tfvars.example

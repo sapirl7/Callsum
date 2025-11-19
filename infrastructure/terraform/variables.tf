@@ -58,3 +58,9 @@ variable "lambda_memory" {
   type        = number
   default     = 512
 }
+
+variable "alert_email" {
+  description = "Email для получения алертов (опционально)"
+  type        = string
+  default     = ""
+}

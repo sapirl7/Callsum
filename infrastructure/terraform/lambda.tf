@@ -28,12 +28,33 @@ resource "aws_lambda_function" "telegram_bot" {
 
   environment {
     variables = {
+      # AWS Resources
       S3_BUCKET_NAME      = aws_s3_bucket.callsum_storage.id
       SQS_QUEUE_URL       = aws_sqs_queue.callsum_jobs.url
       DYNAMODB_TABLE_NAME = aws_dynamodb_table.callsum_jobs.name
-      RUNPOD_ENDPOINT_URL = var.runpod_endpoint_url
       AWS_REGION          = var.aws_region
       ENVIRONMENT         = var.environment
+
+      # Secrets Manager ARNs (Lambda fetches actual values)
+      TELEGRAM_BOT_TOKEN_SECRET_ARN = aws_secretsmanager_secret.telegram_bot_token.arn
+      RUNPOD_API_KEY_SECRET_ARN     = aws_secretsmanager_secret.runpod_api_key.arn
+
+      # RunPod Configuration
+      RUNPOD_ENDPOINT_URL = var.runpod_endpoint_url
+      CALLBACK_URL        = "${aws_api_gateway_stage.webhook.invoke_url}/webhook"
+
+      # Application Configuration (from config.py)
+      MAX_AUDIO_DURATION_SECONDS    = "7200"
+      MIN_AUDIO_DURATION_SECONDS    = "1"
+      MAX_FILE_SIZE_MB              = "100"
+      FREE_TIER_REQUESTS_PER_HOUR   = "10"
+      FREE_TIER_REQUESTS_PER_DAY    = "50"
+      RUNPOD_TIMEOUT_SECONDS        = "3600"
+      MAX_RETRIES                   = "3"
+      RETRY_BACKOFF_MULTIPLIER      = "2"
+      RETRY_MIN_WAIT_SECONDS        = "2"
+      RETRY_MAX_WAIT_SECONDS        = "10"
+      TELEGRAM_MAX_MESSAGE_LENGTH   = "4000"
     }
   }
 
@@ -84,8 +105,8 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
     FunctionName = aws_lambda_function.telegram_bot.function_name
   }
 
-  # Можно добавить SNS topic для алертов
-  # alarm_actions = [aws_sns_topic.alerts.arn]
+  # Отправляем алерты в SNS
+  alarm_actions = [aws_sns_topic.alerts.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
@@ -103,6 +124,9 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   dimensions = {
     FunctionName = aws_lambda_function.telegram_bot.function_name
   }
+
+  # Отправляем алерты в SNS
+  alarm_actions = [aws_sns_topic.alerts.arn]
 }
 
 # Outputs

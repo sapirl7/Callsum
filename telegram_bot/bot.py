@@ -29,25 +29,62 @@ S3_BUCKET = os.getenv('S3_BUCKET_NAME', 'callsum-prod')
 SQS_QUEUE_URL = os.getenv('SQS_QUEUE_URL')
 DYNAMODB_TABLE = os.getenv('DYNAMODB_TABLE_NAME', 'callsum-jobs')
 RUNPOD_ENDPOINT = os.getenv('RUNPOD_ENDPOINT_URL')
-RUNPOD_API_KEY = os.getenv('RUNPOD_API_KEY')
+
+# Application configuration
+MAX_AUDIO_DURATION = int(os.getenv('MAX_AUDIO_DURATION_SECONDS', '7200'))
+MIN_AUDIO_DURATION = int(os.getenv('MIN_AUDIO_DURATION_SECONDS', '1'))
+MAX_FILE_SIZE_MB = int(os.getenv('MAX_FILE_SIZE_MB', '100'))
+FREE_TIER_REQUESTS_PER_HOUR = int(os.getenv('FREE_TIER_REQUESTS_PER_HOUR', '10'))
+FREE_TIER_REQUESTS_PER_DAY = int(os.getenv('FREE_TIER_REQUESTS_PER_DAY', '50'))
+MAX_RETRIES = int(os.getenv('MAX_RETRIES', '3'))
+RETRY_BACKOFF_MULTIPLIER = int(os.getenv('RETRY_BACKOFF_MULTIPLIER', '2'))
+RETRY_MIN_WAIT = int(os.getenv('RETRY_MIN_WAIT_SECONDS', '2'))
+RETRY_MAX_WAIT = int(os.getenv('RETRY_MAX_WAIT_SECONDS', '10'))
+TELEGRAM_MAX_MESSAGE_LENGTH = int(os.getenv('TELEGRAM_MAX_MESSAGE_LENGTH', '4000'))
 
 # Таблица DynamoDB
 jobs_table = dynamodb.Table(DYNAMODB_TABLE)
 
 
+def get_secret(secret_arn: str, key: str, fallback_env_var: str = None):
+    """
+    Получает секрет из AWS Secrets Manager.
+
+    Args:
+        secret_arn: ARN секрета в Secrets Manager
+        key: Ключ в JSON секрета
+        fallback_env_var: Переменная окружения для fallback
+    """
+    try:
+        response = secrets_client.get_secret_value(SecretId=secret_arn)
+        secret = json.loads(response['SecretString'])
+        return secret.get(key)
+    except Exception as e:
+        logger.error(f"Ошибка получения секрета {secret_arn}: {e}")
+        # Fallback на переменную окружения для локальной разработки
+        if fallback_env_var:
+            return os.getenv(fallback_env_var)
+        return None
+
+
 def get_telegram_token():
     """Получает Telegram Bot Token из AWS Secrets Manager"""
-    try:
-        response = secrets_client.get_secret_value(SecretId='telegram-bot-token')
-        secret = json.loads(response['SecretString'])
-        return secret['token']
-    except Exception as e:
-        logger.error(f"Ошибка получения токена: {e}")
-        # Fallback на переменную окружения для локальной разработки
-        return os.getenv('TELEGRAM_BOT_TOKEN')
+    telegram_secret_arn = os.getenv('TELEGRAM_BOT_TOKEN_SECRET_ARN')
+    if telegram_secret_arn:
+        return get_secret(telegram_secret_arn, 'token', 'TELEGRAM_BOT_TOKEN')
+    return os.getenv('TELEGRAM_BOT_TOKEN')
+
+
+def get_runpod_api_key():
+    """Получает RunPod API Key из AWS Secrets Manager"""
+    runpod_secret_arn = os.getenv('RUNPOD_API_KEY_SECRET_ARN')
+    if runpod_secret_arn:
+        return get_secret(runpod_secret_arn, 'api_key', 'RUNPOD_API_KEY')
+    return os.getenv('RUNPOD_API_KEY')
 
 
 BOT_TOKEN = get_telegram_token()
+RUNPOD_API_KEY = get_runpod_api_key()
 bot = Bot(token=BOT_TOKEN)
 
 
@@ -104,34 +141,61 @@ def update_job_status(job_id: str, status: str, progress: int = None):
 
 
 async def trigger_runpod(job_id: str, s3_key: str, user_id: int, chat_id: int):
-    """Пробуждает RunPod serverless endpoint для обработки"""
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                f"{RUNPOD_ENDPOINT}/run",
-                json={
-                    'input': {
-                        'job_id': job_id,
-                        's3_bucket': S3_BUCKET,
-                        's3_key': s3_key,
-                        'user_id': str(user_id),
-                        'chat_id': str(chat_id),
-                        'callback_url': os.getenv('CALLBACK_URL')  # Для webhook результатов
-                    }
-                },
-                headers={'Authorization': f"Bearer {RUNPOD_API_KEY}"}
+    """
+    Пробуждает RunPod serverless endpoint для обработки.
+    Использует retry с exponential backoff.
+    """
+    for attempt in range(MAX_RETRIES):
+        try:
+            wait_time = min(
+                RETRY_MIN_WAIT * (RETRY_BACKOFF_MULTIPLIER ** attempt),
+                RETRY_MAX_WAIT
             )
 
-            if response.status_code == 200:
-                logger.info(f"RunPod triggered for job {job_id}")
-                return response.json()
-            else:
-                logger.error(f"RunPod trigger failed: {response.status_code} {response.text}")
-                return None
+            if attempt > 0:
+                logger.info(f"Retry {attempt}/{MAX_RETRIES} for job {job_id}, waiting {wait_time}s")
+                await asyncio.sleep(wait_time)
 
-    except Exception as e:
-        logger.error(f"Ошибка вызова RunPod: {e}")
-        return None
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    f"{RUNPOD_ENDPOINT}/run",
+                    json={
+                        'input': {
+                            'job_id': job_id,
+                            's3_bucket': S3_BUCKET,
+                            's3_key': s3_key,
+                            'user_id': str(user_id),
+                            'chat_id': str(chat_id),
+                            'callback_url': os.getenv('CALLBACK_URL')  # Для webhook результатов
+                        }
+                    },
+                    headers={'Authorization': f"Bearer {RUNPOD_API_KEY}"}
+                )
+
+                if response.status_code == 200:
+                    logger.info(f"RunPod triggered for job {job_id}")
+                    return response.json()
+                elif response.status_code >= 500:
+                    # Server error - retry
+                    logger.warning(f"RunPod server error {response.status_code}, will retry")
+                    continue
+                else:
+                    # Client error - don't retry
+                    logger.error(f"RunPod trigger failed: {response.status_code} {response.text}")
+                    return None
+
+        except httpx.TimeoutException:
+            logger.warning(f"RunPod timeout on attempt {attempt + 1}/{MAX_RETRIES}")
+            continue
+        except httpx.NetworkError as e:
+            logger.warning(f"RunPod network error on attempt {attempt + 1}/{MAX_RETRIES}: {e}")
+            continue
+        except Exception as e:
+            logger.error(f"Unexpected error calling RunPod: {e}")
+            return None
+
+    logger.error(f"Failed to trigger RunPod after {MAX_RETRIES} attempts for job {job_id}")
+    return None
 
 
 # ===== TELEGRAM HANDLERS =====
@@ -187,12 +251,28 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     voice = update.message.voice
 
-    # Проверка длительности (макс 2 часа)
-    if voice.duration > 7200:
+    # Проверка длительности
+    if voice.duration > MAX_AUDIO_DURATION:
         await update.message.reply_text(
             "❌ Слишком длинное аудио!\n"
-            "Максимум: 2 часа (120 минут)\n"
+            f"Максимум: {MAX_AUDIO_DURATION // 60} минут\n"
             f"Ваше аудио: {voice.duration // 60} минут"
+        )
+        return
+
+    if voice.duration < MIN_AUDIO_DURATION:
+        await update.message.reply_text(
+            "❌ Слишком короткое аудио!\n"
+            f"Минимум: {MIN_AUDIO_DURATION} секунд"
+        )
+        return
+
+    # Проверка размера файла
+    if voice.file_size and voice.file_size > MAX_FILE_SIZE_MB * 1024 * 1024:
+        await update.message.reply_text(
+            "❌ Файл слишком большой!\n"
+            f"Максимум: {MAX_FILE_SIZE_MB} MB\n"
+            f"Ваш файл: {voice.file_size / (1024 * 1024):.1f} MB"
         )
         return
 
@@ -350,8 +430,10 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 result_obj = s3_client.get_object(Bucket=S3_BUCKET, Key=result_key)
                 result = json.loads(result_obj['Body'].read())
                 await send_result_to_user(update.effective_chat.id, result)
-            except:
-                pass
+            except (s3_client.exceptions.NoSuchKey, json.JSONDecodeError) as e:
+                logger.warning(f"Could not resend result for job {job_id}: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error resending result: {e}")
 
         elif status == 'failed':
             error_msg = job.get('error_message', 'Неизвестная ошибка')
@@ -460,29 +542,96 @@ async def send_result_to_user(chat_id: int, result: dict):
 
 # ===== AWS LAMBDA HANDLER =====
 
+async def handle_runpod_callback(callback_data: dict):
+    """
+    Обрабатывает callback от RunPod с результатами обработки.
+
+    Args:
+        callback_data: Данные от RunPod с результатами
+    """
+    try:
+        job_id = callback_data.get('job_id')
+        chat_id = callback_data.get('chat_id')
+        status = callback_data.get('status')
+
+        logger.info(f"Processing RunPod callback for job {job_id}, status: {status}")
+
+        if not job_id or not chat_id:
+            logger.error("Missing job_id or chat_id in callback")
+            return
+
+        # Обновляем статус в DynamoDB
+        if status == 'COMPLETED':
+            result = callback_data.get('result')
+            if result:
+                update_job_status(job_id, 'completed', 100)
+                await send_result_to_user(int(chat_id), result)
+                logger.info(f"Successfully sent results for job {job_id}")
+            else:
+                logger.error(f"No result data in callback for job {job_id}")
+                update_job_status(job_id, 'failed')
+                await bot.send_message(
+                    chat_id=int(chat_id),
+                    text="❌ Обработка завершилась с ошибкой. Результаты не получены."
+                )
+        elif status == 'FAILED':
+            error_msg = callback_data.get('error', 'Unknown error')
+            update_job_status(job_id, 'failed')
+            logger.error(f"Job {job_id} failed: {error_msg}")
+            await bot.send_message(
+                chat_id=int(chat_id),
+                text=f"❌ Обработка завершилась с ошибкой:\n{error_msg}"
+            )
+        else:
+            logger.warning(f"Unknown callback status: {status}")
+
+    except Exception as e:
+        logger.error(f"Error processing RunPod callback: {e}", exc_info=True)
+
+
 def lambda_handler(event, context):
     """
     Entry point для AWS Lambda.
-    Вызывается когда приходит webhook от Telegram.
+    Обрабатывает:
+    1. Webhook от Telegram (новые сообщения)
+    2. Callback от RunPod (результаты обработки)
     """
     logger.info(f"Lambda invoked with event: {json.dumps(event)}")
 
     try:
-        # Создаем приложение
-        application = Application.builder().token(BOT_TOKEN).build()
+        body = json.loads(event.get('body', '{}')) if 'body' in event else event
 
-        # Регистрируем handlers
-        application.add_handler(CommandHandler("start", start_command))
-        application.add_handler(CommandHandler("help", help_command))
-        application.add_handler(CommandHandler("status", status_command))
-        application.add_handler(MessageHandler(filters.VOICE, voice_handler))
+        # Определяем тип события
+        is_runpod_callback = 'job_id' in body and 'status' in body
+        is_telegram_webhook = 'update_id' in body or 'message' in body
 
-        # Обрабатываем webhook от Telegram
-        if 'body' in event:
-            update = Update.de_json(json.loads(event['body']), bot)
+        if is_runpod_callback:
+            # Обрабатываем callback от RunPod
+            logger.info("Detected RunPod callback")
+            asyncio.run(handle_runpod_callback(body))
+
+        elif is_telegram_webhook or 'body' in event:
+            # Обрабатываем webhook от Telegram
+            logger.info("Detected Telegram webhook")
+            application = Application.builder().token(BOT_TOKEN).build()
+
+            # Регистрируем handlers
+            application.add_handler(CommandHandler("start", start_command))
+            application.add_handler(CommandHandler("help", help_command))
+            application.add_handler(CommandHandler("status", status_command))
+            application.add_handler(MessageHandler(filters.VOICE, voice_handler))
+
+            # Обрабатываем webhook от Telegram
+            if 'body' in event:
+                update = Update.de_json(json.loads(event['body']), bot)
+            else:
+                update = Update.de_json(body, bot)
 
             # Запускаем обработку в event loop
             asyncio.run(application.process_update(update))
+
+        else:
+            logger.warning(f"Unknown event type: {body}")
 
         return {
             'statusCode': 200,

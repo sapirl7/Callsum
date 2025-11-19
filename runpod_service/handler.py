@@ -9,6 +9,7 @@ import torch
 import boto3
 import tempfile
 import logging
+import httpx
 from faster_whisper import WhisperModel
 from pyannote.audio import Pipeline
 from vllm import LLM, SamplingParams
@@ -321,10 +322,27 @@ def handler(job):
         s3_client.delete_object(Bucket=s3_bucket, Key=s3_key)
 
         # 9. Отправляем callback (опционально)
-        if job_input.get('callback_url') and chat_id:
-            # Можно вызвать Lambda для отправки результата в Telegram
-            # Или использовать API Gateway endpoint
-            pass
+        callback_url = job_input.get('callback_url')
+        if callback_url and chat_id:
+            try:
+                logger.info(f"Отправка callback на {callback_url}")
+                with httpx.Client(timeout=30.0) as client:
+                    callback_response = client.post(
+                        callback_url,
+                        json={
+                            'job_id': job_id,
+                            'chat_id': chat_id,
+                            'status': 'COMPLETED',
+                            'result': result
+                        }
+                    )
+                    if callback_response.status_code == 200:
+                        logger.info(f"Callback отправлен успешно для job {job_id}")
+                    else:
+                        logger.warning(f"Callback failed: {callback_response.status_code}")
+            except Exception as callback_error:
+                logger.error(f"Ошибка отправки callback: {callback_error}")
+                # Не падаем, результат уже в S3
 
         logger.info(f"Задача {job_id} завершена успешно! ✅")
 
@@ -350,6 +368,24 @@ def handler(job):
 
         result_key = f"users/{user_id}/results/{job_id}.json"
         upload_to_s3(s3_bucket, result_key, error_result)
+
+        # Отправляем callback об ошибке
+        callback_url = job_input.get('callback_url')
+        if callback_url and chat_id:
+            try:
+                logger.info(f"Отправка error callback на {callback_url}")
+                with httpx.Client(timeout=30.0) as client:
+                    client.post(
+                        callback_url,
+                        json={
+                            'job_id': job_id,
+                            'chat_id': chat_id,
+                            'status': 'FAILED',
+                            'error': str(e)
+                        }
+                    )
+            except Exception as callback_error:
+                logger.error(f"Ошибка отправки error callback: {callback_error}")
 
         return {
             "status": "error",
