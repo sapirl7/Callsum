@@ -18,6 +18,18 @@ import asyncio
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# Поддерживаемые аудио форматы
+SUPPORTED_AUDIO_FORMATS = {
+    'audio/ogg',
+    'audio/mpeg',
+    'audio/mp3',
+    'audio/mp4',
+    'audio/m4a',
+    'audio/wav',
+    'audio/x-wav',
+    'audio/webm'
+}
+
 # AWS клиенты
 s3_client = boto3.client('s3')
 sqs_client = boto3.client('sqs')
