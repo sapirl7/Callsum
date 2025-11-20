@@ -86,20 +86,6 @@ resource "aws_s3_bucket_cors_configuration" "callsum_storage" {
   }
 }
 
-# S3 Event Notification → SQS (когда файл загружен в /new/)
-resource "aws_s3_bucket_notification" "callsum_storage" {
-  bucket = aws_s3_bucket.callsum_storage.id
-
-  queue {
-    queue_arn     = aws_sqs_queue.callsum_jobs.arn
-    events        = ["s3:ObjectCreated:*"]
-    filter_prefix = "users/"
-    filter_suffix = "/new/"
-  }
-
-  depends_on = [aws_sqs_queue_policy.callsum_jobs]
-}
-
 # Outputs
 output "s3_bucket_name" {
   description = "Имя S3 bucket"

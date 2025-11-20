@@ -10,10 +10,6 @@ output "summary" {
     s3_bucket      = aws_s3_bucket.callsum_storage.id
     s3_bucket_arn  = aws_s3_bucket.callsum_storage.arn
 
-    # Queue
-    sqs_queue_url = aws_sqs_queue.callsum_jobs.url
-    sqs_dlq_url   = aws_sqs_queue.callsum_jobs_dlq.url
-
     # Database
     dynamodb_table = aws_dynamodb_table.callsum_jobs.name
 
@@ -57,7 +53,6 @@ output "next_steps" {
 
     5. Мониторинг:
        - CloudWatch Logs: https://console.aws.amazon.com/cloudwatch/
-       - SQS Queue: ${aws_sqs_queue.callsum_jobs.url}
        - DynamoDB: ${aws_dynamodb_table.callsum_jobs.name}
 
     📊 DASHBOARD:

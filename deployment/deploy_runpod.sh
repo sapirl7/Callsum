@@ -52,6 +52,7 @@ fi
 echo "🐳 Сборка Docker образа..."
 docker build \
     --build-arg PRELOAD_MODELS=true \
+    --build-arg HF_TOKEN=$HF_TOKEN \
     -t ${DOCKER_IMAGE}:${TAG} \
     .
 
