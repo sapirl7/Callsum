@@ -99,6 +99,7 @@ def get_runpod_api_key():
 
 BOT_TOKEN = get_telegram_token()
 RUNPOD_API_KEY = get_runpod_api_key()
+TELEGRAM_SECRET_TOKEN = os.getenv('TELEGRAM_SECRET_TOKEN', '')  # Secret token для защиты webhook
 bot = Bot(token=BOT_TOKEN)
 
 
@@ -203,21 +204,27 @@ def increment_rate_limit(user_id: int):
         logger.error(f"Rate limit increment error: {e}")
 
 
-def create_job_record(job_id: str, user_id: int, s3_key: str, duration: int):
+def create_job_record(job_id: str, user_id: int, s3_key: str, duration: int, chat_id: int = None, progress_message_id: int = None):
     """Создает запись о задаче в DynamoDB"""
     try:
-        jobs_table.put_item(
-            Item={
-                'job_id': job_id,
-                'user_id': user_id,
-                's3_key': s3_key,
-                'duration': duration,
-                'status': 'queued',
-                'progress': 0,
-                'created_at': datetime.utcnow().isoformat(),
-                'ttl': int(datetime.utcnow().timestamp()) + (30 * 24 * 60 * 60)  # 30 дней
-            }
-        )
+        item = {
+            'job_id': job_id,
+            'user_id': user_id,
+            's3_key': s3_key,
+            'duration': duration,
+            'status': 'queued',
+            'progress': 0,
+            'created_at': datetime.utcnow().isoformat(),
+            'ttl': int(datetime.utcnow().timestamp()) + (30 * 24 * 60 * 60)  # 30 дней
+        }
+
+        # Добавляем опциональные поля для редактирования прогресс-сообщения
+        if chat_id is not None:
+            item['chat_id'] = chat_id
+        if progress_message_id is not None:
+            item['progress_message_id'] = progress_message_id
+
+        jobs_table.put_item(Item=item)
         logger.info(f"Создана запись задачи {job_id}")
     except Exception as e:
         logger.error(f"Ошибка создания записи в DynamoDB: {e}")
@@ -474,40 +481,29 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         logger.info(f"Файл загружен в S3: {s3_key}")
 
-        # 3. Создаем запись в DynamoDB
-        create_job_record(job_id, user_id, s3_key, voice.duration)
+        # 3. Создаем запись в DynamoDB (без progress_message_id пока)
+        create_job_record(job_id, user_id, s3_key, voice.duration, chat_id=chat_id)
 
         # 3.1 Инкрементируем rate limit (после успешного создания задачи)
         increment_rate_limit(user_id)
 
-        # 4. Отправляем задачу в SQS
-        sqs_client.send_message(
-            QueueUrl=SQS_QUEUE_URL,
-            MessageBody=json.dumps({
-                'job_id': job_id,
-                's3_key': s3_key,
-                'user_id': user_id,
-                'chat_id': chat_id,
-                'duration': voice.duration
-            }),
-            MessageAttributes={
-                'job_id': {'StringValue': job_id, 'DataType': 'String'},
-                'user_id': {'StringValue': str(user_id), 'DataType': 'String'}
-            }
-        )
-
-        logger.info(f"Задача отправлена в SQS: {job_id}")
-
-        # 5. Триггерим RunPod serverless endpoint
+        # 4. Триггерим RunPod serverless endpoint напрямую (с автоматическим callback)
         runpod_response = await trigger_runpod(job_id, s3_key, user_id, chat_id)
 
         if runpod_response:
             update_job_status(job_id, 'processing', progress=5)
-            await update.message.reply_text(
+            # Отправляем начальное сообщение и сохраняем его ID для последующего редактирования
+            progress_msg = await update.message.reply_text(
                 "🚀 *Задача запущена!*\n\n"
                 "GPU сервер пробудился и начал обработку.\n"
-                "Вы получите уведомление когда всё будет готово! ⏳",
+                "Статус будет обновляться в этом сообщении... ⏳",
                 parse_mode='Markdown'
+            )
+            # Обновляем запись в DynamoDB с message_id для редактирования
+            jobs_table.update_item(
+                Key={'job_id': job_id},
+                UpdateExpression='SET progress_message_id = :msg_id',
+                ExpressionAttributeValues={':msg_id': progress_msg.message_id}
             )
         else:
             update_job_status(job_id, 'queued')
@@ -611,7 +607,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-async def send_result_to_user(chat_id: int, result: dict):
+async def send_result_to_user(chat_id: int, result: dict, job_id: str = None):
     """
     Отправляет результат обработки пользователю в Telegram.
 
@@ -619,6 +615,22 @@ async def send_result_to_user(chat_id: int, result: dict):
     - ЧТО ОБСУДИЛИ (3 блока)
     - ПОРУЧЕНИЯ (3 блока с задачами)
     """
+
+    # Редактируем прогресс-сообщение на "✅ Готово!" перед отправкой полных результатов
+    if job_id:
+        try:
+            job = jobs_table.get_item(Key={'job_id': job_id}).get('Item')
+            progress_message_id = job.get('progress_message_id') if job else None
+
+            if progress_message_id:
+                await bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=progress_message_id,
+                    text="✅ *Готово!*\n\nОбработка завершена, результаты отправляются...",
+                    parse_mode='Markdown'
+                )
+        except Exception as edit_error:
+            logger.warning(f"Failed to edit final progress message: {edit_error}")
 
     # Формируем красивое сообщение
     message = "✅ *ОБРАБОТКА ЗАВЕРШЕНА*\n\n"
@@ -727,7 +739,7 @@ async def handle_runpod_callback(callback_data: dict):
             result = callback_data.get('result')
             if result:
                 update_job_status(job_id, 'completed', 100)
-                await send_result_to_user(int(chat_id), result)
+                await send_result_to_user(int(chat_id), result, job_id=job_id)
                 logger.info(f"Successfully sent results for job {job_id}")
             else:
                 logger.error(f"No result data in callback for job {job_id}")
@@ -742,12 +754,21 @@ async def handle_runpod_callback(callback_data: dict):
             message = callback_data.get('message', '')
             update_job_status(job_id, 'processing', progress)
 
-            # Отправляем уведомление пользователю (опционально, чтобы не спамить)
-            if progress in [20, 50, 70]:  # Только на ключевых этапах
-                await bot.send_message(
-                    chat_id=int(chat_id),
-                    text=f"⏳ {message}\n\nПрогресс: {progress}%"
-                )
+            # Редактируем то же сообщение для UX (вместо спама новыми сообщениями)
+            try:
+                job = jobs_table.get_item(Key={'job_id': job_id}).get('Item')
+                progress_message_id = job.get('progress_message_id') if job else None
+
+                if progress_message_id and progress in [20, 50, 70]:  # Только на ключевых этапах
+                    await bot.edit_message_text(
+                        chat_id=int(chat_id),
+                        message_id=progress_message_id,
+                        text=f"🚀 *Задача запущена!*\n\n⏳ {message}\n\nПрогресс: {progress}%",
+                        parse_mode='Markdown'
+                    )
+            except Exception as edit_error:
+                logger.warning(f"Failed to edit progress message: {edit_error}")
+
             logger.info(f"Progress update for job {job_id}: {progress}% - {message}")
 
         elif status == 'FAILED':
@@ -789,6 +810,20 @@ def lambda_handler(event, context):
         elif is_telegram_webhook or 'body' in event:
             # Обрабатываем webhook от Telegram
             logger.info("Detected Telegram webhook")
+
+            # SECURITY: Проверяем secret token от Telegram
+            if TELEGRAM_SECRET_TOKEN:
+                headers = event.get('headers', {})
+                # API Gateway может преобразовывать заголовки в lowercase
+                received_token = headers.get('X-Telegram-Bot-Api-Secret-Token') or headers.get('x-telegram-bot-api-secret-token', '')
+
+                if received_token != TELEGRAM_SECRET_TOKEN:
+                    logger.warning(f"Invalid secret token from {headers.get('X-Forwarded-For', 'unknown')}")
+                    return {
+                        'statusCode': 403,
+                        'body': json.dumps('Forbidden')
+                    }
+
             application = Application.builder().token(BOT_TOKEN).build()
 
             # Регистрируем handlers

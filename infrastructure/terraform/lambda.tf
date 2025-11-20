@@ -40,6 +40,9 @@ resource "aws_lambda_function" "telegram_bot" {
       TELEGRAM_BOT_TOKEN_SECRET_ARN = aws_secretsmanager_secret.telegram_bot_token.arn
       RUNPOD_API_KEY_SECRET_ARN     = aws_secretsmanager_secret.runpod_api_key.arn
 
+      # Security: Secret token для защиты webhook от подделки
+      TELEGRAM_SECRET_TOKEN = var.telegram_secret_token
+
       # RunPod Configuration
       RUNPOD_ENDPOINT_URL = var.runpod_endpoint_url
       CALLBACK_URL        = "${aws_api_gateway_stage.webhook.invoke_url}/webhook"

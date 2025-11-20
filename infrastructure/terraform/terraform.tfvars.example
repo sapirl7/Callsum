@@ -6,6 +6,11 @@
 # Telegram Bot Token (получите у @BotFather)
 telegram_bot_token = "YOUR_TELEGRAM_BOT_TOKEN"
 
+# Telegram Secret Token (для защиты webhook)
+# Сгенерируйте случайную строку (например: openssl rand -hex 32)
+# Укажите этот же токен при установке webhook через Telegram API
+telegram_secret_token = "YOUR_RANDOM_SECRET_TOKEN"
+
 # Hugging Face Token (для Pyannote модели)
 # Получите на https://huggingface.co/settings/tokens
 hf_token = "YOUR_HF_TOKEN"
