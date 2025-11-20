@@ -32,13 +32,11 @@ SUPPORTED_AUDIO_FORMATS = {
 
 # AWS клиенты
 s3_client = boto3.client('s3')
-sqs_client = boto3.client('sqs')
 secrets_client = boto3.client('secretsmanager')
 dynamodb = boto3.resource('dynamodb')
 
 # Конфигурация из переменных окружения
 S3_BUCKET = os.getenv('S3_BUCKET_NAME', 'callsum-prod')
-SQS_QUEUE_URL = os.getenv('SQS_QUEUE_URL')
 DYNAMODB_TABLE = os.getenv('DYNAMODB_TABLE_NAME', 'callsum-jobs')
 RATE_LIMITS_TABLE = os.getenv('RATE_LIMITS_TABLE_NAME', 'callsum-jobs-rate-limits')
 RUNPOD_ENDPOINT = os.getenv('RUNPOD_ENDPOINT_URL')

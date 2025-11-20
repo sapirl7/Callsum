@@ -184,8 +184,7 @@ terraform output -json > outputs.json
 ### 4.3 Что будет создано?
 
 - **S3 Bucket** - хранение аудио и результатов (шифрование AES-256)
-- **SQS Queue** - очередь задач + Dead Letter Queue
-- **DynamoDB Table** - метаданные задач
+- **DynamoDB Table** - метаданные задач и rate limiting
 - **Lambda Function** - Telegram бот
 - **API Gateway** - webhook для Telegram
 - **Secrets Manager** - хранение токенов
@@ -199,7 +198,6 @@ terraform output -json > outputs.json
 - Lambda: ~$0.50
 - DynamoDB: ~$0.30
 - API Gateway: ~$0.10
-- SQS: бесплатно (в пределах Free Tier)
 
 ---
 
@@ -381,9 +379,9 @@ aws cloudwatch put-dashboard --dashboard-name Callsum --dashboard-body file://cl
 Метрики для отслеживания:
 - Lambda errors
 - Lambda duration
-- SQS queue depth
 - DynamoDB throttles
 - API Gateway 4xx/5xx
+- RunPod job success rate
 
 ### 8.2 Cost Explorer
 
@@ -477,13 +475,13 @@ aws cloudwatch put-dashboard --dashboard-name Callsum --dashboard-body file://cl
       ↓
 [Telegram Bot API]
       ↓
-[API Gateway] → [Lambda] → [S3] → [SQS]
-                    ↓           ↓
-              [DynamoDB]   [RunPod GPU]
+[API Gateway] → [Lambda] → [S3]
+                    ↓         ↓
+              [DynamoDB]  [RunPod GPU]
                               ↓
                         [Whisper + Pyannote + Llama]
                               ↓
-                            [S3]
+                          [Callback]
                               ↓
                         [Telegram User]
 ```

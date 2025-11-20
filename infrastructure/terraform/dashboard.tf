@@ -117,28 +117,6 @@ resource "aws_cloudwatch_dashboard" "main" {
         }
       },
 
-      # SQS Metrics
-      {
-        type = "metric"
-        x    = 12
-        y    = 12
-        width = 12
-        height = 6
-
-        properties = {
-          metrics = [
-            ["AWS/SQS", "NumberOfMessagesSent", { stat = "Sum", label = "Messages Sent" }],
-            [".", "NumberOfMessagesReceived", { stat = "Sum", label = "Messages Received" }],
-            [".", "ApproximateNumberOfMessagesVisible", { stat = "Average", label = "Queue Depth" }],
-          ]
-          view    = "timeSeries"
-          stacked = false
-          region  = var.aws_region
-          title   = "SQS Queue"
-          period  = 300
-        }
-      },
-
       # Text widget with key information
       {
         type = "text"
