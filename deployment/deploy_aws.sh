@@ -75,7 +75,7 @@ terraform plan -out=tfplan
 echo ""
 echo -e "${YELLOW}⚠️  ВНИМАНИЕ: Сейчас будет создана инфраструктура на AWS${NC}"
 echo ""
-echo "Стоимость: ~\$1-3/месяц (S3 + Lambda + DynamoDB + SQS)"
+echo "Стоимость: ~\$1-3/месяц (S3 + Lambda + DynamoDB)"
 echo ""
 read -p "Продолжить? (yes/no): " confirm
 

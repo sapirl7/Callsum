@@ -88,3 +88,32 @@ variable "enable_cost_tracking" {
   type        = bool
   default     = true
 }
+
+# === DigitalOcean Spaces Configuration (опционально) ===
+# Используйте если хотите хранить файлы в DO Spaces вместо AWS S3
+
+variable "use_digitalocean_spaces" {
+  description = "Использовать DigitalOcean Spaces вместо AWS S3"
+  type        = bool
+  default     = false
+}
+
+variable "s3_endpoint" {
+  description = "S3-совместимый endpoint (для DigitalOcean Spaces: https://<region>.digitaloceanspaces.com)"
+  type        = string
+  default     = ""
+}
+
+variable "s3_access_key" {
+  description = "Access Key для S3-совместимого хранилища (DigitalOcean Spaces Key)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "s3_secret_key" {
+  description = "Secret Key для S3-совместимого хранилища (DigitalOcean Spaces Secret)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

@@ -41,7 +41,6 @@ Callsum/
 │       ├── main.tf             # Основная конфигурация
 │       ├── variables.tf        # Переменные
 │       ├── s3.tf               # S3 bucket
-│       ├── sqs.tf              # SQS очередь
 │       ├── dynamodb.tf         # DynamoDB таблица
 │       ├── lambda.tf           # Lambda функция
 │       ├── api_gateway.tf      # API Gateway
@@ -127,7 +126,6 @@ curl -X POST "https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook" \
 - Lambda: ~$0.50
 - DynamoDB: ~$0.30
 - API Gateway: ~$0.10
-- SQS: бесплатно (Free Tier)
 
 ### RunPod (~$8-11/месяц при 60 часах аудио):
 - RTX 3090: $0.44/час
@@ -157,7 +155,7 @@ curl -X POST "https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook" \
 │  └──────────┘    └─────┬────┘     │
 │                        │           │
 │  ┌────┐  ┌────┐  ┌────┴────┐     │
-│  │ S3 │  │SQS │  │DynamoDB │     │
+│  │ S3 │    │DynamoDB │     │
 │  └────┘  └─┬──┘  └─────────┘     │
 │            │                       │
 └────────────┼───────────────────────┘
@@ -176,7 +174,7 @@ curl -X POST "https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook" \
 **Поток данных:**
 1. Пользователь отправляет голосовое → Telegram API
 2. Webhook → API Gateway → Lambda
-3. Lambda загружает в S3 → отправляет в SQS
+3. Lambda загружает в S3 → триггерит RunPod
 4. Lambda триггерит RunPod Serverless
 5. RunPod обрабатывает (Whisper + Pyannote + Llama)
 6. Результат сохраняется в S3
@@ -201,7 +199,7 @@ curl -X POST "https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook" \
 ### CloudWatch Dashboards
 - Lambda errors & duration
 - API Gateway requests
-- SQS queue depth
+- RunPod job success rate
 - DynamoDB throttles
 
 ### RunPod Analytics

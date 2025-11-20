@@ -18,13 +18,19 @@ from vllm import LLM, SamplingParams
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# AWS клиент
-s3_client = boto3.client(
-    's3',
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-    region_name=os.getenv('AWS_REGION', 'us-east-1')
-)
+# AWS / S3-compatible клиент (поддержка DigitalOcean Spaces)
+s3_config = {
+    'service_name': 's3',
+    'aws_access_key_id': os.getenv('AWS_ACCESS_KEY_ID'),
+    'aws_secret_access_key': os.getenv('AWS_SECRET_ACCESS_KEY'),
+    'region_name': os.getenv('AWS_REGION', 'us-east-1')
+}
+
+# Если указан кастомный endpoint (DigitalOcean Spaces)
+if os.getenv('S3_ENDPOINT_URL'):
+    s3_config['endpoint_url'] = os.getenv('S3_ENDPOINT_URL')
+
+s3_client = boto3.client(**s3_config)
 
 # Определение устройства
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

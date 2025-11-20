@@ -117,7 +117,6 @@
 - **RunPod Serverless** - ML обработка (Whisper + Pyannote + Llama)
 - **S3** - хранение аудио и результатов (encrypted, versioned)
 - **DynamoDB** - метаданные задач и rate limiting
-- **SQS** - очередь задач (с DLQ)
 - **API Gateway** - webhook endpoint + health check
 - **CloudWatch** - логи, метрики, алармы
 - **SNS** - уведомления об алармах
@@ -134,7 +133,6 @@
 | **DynamoDB** | $0.25 |
 | **API Gateway** | $0.35 |
 | **CloudWatch** | $0.30 |
-| **SQS** | $0.10 |
 | **Secrets Manager** | $1.20 |
 | **RunPod GPU** (RTX 3090) | $0.44/hour × 30 hours ≈ $13.20 |
 | **ИТОГО** | **~$16/месяц** |
@@ -276,7 +274,7 @@ curl https://your-api-gateway-url/health
 - **DynamoDB Capacity** - использование capacity units
 - **S3 Storage** - количество объектов и размер
 - **API Gateway Requests** - запросы к API
-- **SQS Queue Depth** - глубина очереди
+- **RunPod Job Success Rate** - успешность GPU задач
 
 ### Алармы:
 - 📧 Email уведомления при превышении порогов
