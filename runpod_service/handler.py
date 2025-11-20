@@ -52,14 +52,15 @@ diarization_pipeline = Pipeline.from_pretrained(
 diarization_pipeline.to(torch.device(DEVICE))
 logger.info("Pyannote загружен ✓")
 
-logger.info("Загрузка Llama 3...")
+logger.info("Загрузка Llama 3.1...")
 llm = LLM(
-    model="meta-llama/Meta-Llama-3-70B-Instruct",
+    model="meta-llama/Meta-Llama-3.1-8B-Instruct",  # 8B вместо 70B - экономия 60%+ стоимости
     download_dir="/models/llama",
-    tensor_parallel_size=1,  # Используем 1 GPU
-    gpu_memory_utilization=0.9
+    tensor_parallel_size=1,  # 1 GPU достаточно для 8B
+    gpu_memory_utilization=0.85,  # Уменьшено с 0.9 для стабильности
+    max_model_len=8192  # Увеличенный контекст для длинных встреч
 )
-logger.info("Llama 3 загружен ✓")
+logger.info("Llama 3.1 8B загружен ✓")
 
 logger.info("Все модели готовы! 🚀")
 
@@ -336,12 +337,24 @@ def handler(job):
             outputs = llm.generate([prompt], sampling_params)
             summary_text = outputs[0].outputs[0].text
 
-            # Парсим JSON
+            # Парсим JSON с защитой от вступлений LLM (regex extraction)
             try:
-                summary = json.loads(summary_text)
-                logger.info("Саммари успешно создано ✓")
+                # Извлекаем JSON из ответа (LLM может добавить текст до/после JSON)
+                import re
+                json_match = re.search(r'\{.*\}', summary_text, re.DOTALL)
+
+                if json_match:
+                    json_str = json_match.group()
+                    summary = json.loads(json_str)
+                    logger.info("Саммари успешно создано ✓")
+                else:
+                    # Если не нашли JSON в фигурных скобках, пытаемся парсить весь текст
+                    summary = json.loads(summary_text)
+                    logger.info("Саммари создано (fallback парсинг) ✓")
+
             except json.JSONDecodeError as e:
                 logger.warning(f"Не удалось распарсить JSON от LLM: {e}")
+                logger.debug(f"LLM response: {summary_text[:500]}")  # Первые 500 символов для диагностики
                 llm_error = f"JSON parsing failed: {str(e)}"
                 summary = None
 

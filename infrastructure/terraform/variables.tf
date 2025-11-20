@@ -18,6 +18,12 @@ variable "telegram_bot_token" {
   sensitive   = true
 }
 
+variable "telegram_secret_token" {
+  description = "Secret token для защиты Telegram webhook от поддельных запросов"
+  type        = string
+  sensitive   = true
+}
+
 variable "hf_token" {
   description = "Hugging Face Token для Pyannote"
   type        = string
