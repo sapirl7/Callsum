@@ -39,10 +39,15 @@ COPY handler.py .
 # Предзагрузка моделей для ускорения cold start
 # (опционально, увеличивает размер образа но ускоряет запуск)
 ARG PRELOAD_MODELS=true
+ARG HF_TOKEN
 
 RUN if [ "$PRELOAD_MODELS" = "true" ]; then \
     echo "Предзагрузка моделей..."; \
+    # Whisper large-v3 (~3GB)
     python3 -c "from faster_whisper import WhisperModel; WhisperModel('large-v3', device='cpu', download_root='/models/whisper')"; \
+    # Llama 3.1-8B-Instruct (~5GB) - экономит 1-3 минуты на cold start
+    pip3 install --no-cache-dir huggingface_hub && \
+    python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='meta-llama/Meta-Llama-3.1-8B-Instruct', cache_dir='/models/llama', token='${HF_TOKEN}') if '${HF_TOKEN}' else print('Warning: HF_TOKEN not set, skipping Llama download')"; \
     fi
 
 # Переменные окружения

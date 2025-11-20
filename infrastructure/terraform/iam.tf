@@ -54,17 +54,6 @@ resource "aws_iam_role_policy" "lambda_telegram_bot_policy" {
         ]
         Resource = aws_s3_bucket.callsum_storage.arn
       },
-      # SQS доступ
-      {
-        Effect = "Allow"
-        Action = [
-          "sqs:SendMessage",
-          "sqs:ReceiveMessage",
-          "sqs:DeleteMessage",
-          "sqs:GetQueueAttributes"
-        ]
-        Resource = aws_sqs_queue.callsum_jobs.arn
-      },
       # DynamoDB доступ
       {
         Effect = "Allow"
