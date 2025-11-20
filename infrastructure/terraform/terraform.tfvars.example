@@ -50,3 +50,33 @@ lambda_memory  = 512     # MB
 
 # DynamoDB таблица для jobs
 dynamodb_table_name = "callsum-jobs"
+
+# === DIGITALOCEAN SPACES (ОПЦИОНАЛЬНО) ===
+# Используйте если хотите хранить файлы в DigitalOcean Spaces вместо AWS S3
+# Стоимость: ~$5/месяц за 250GB (дешевле чем AWS S3)
+
+# Включить DigitalOcean Spaces вместо AWS S3
+use_digitalocean_spaces = false  # Установите true для использования DO Spaces
+
+# DigitalOcean Spaces Endpoint
+# Формат: https://<region>.digitaloceanspaces.com
+# Регионы: nyc3, sfo3, sgp1, fra1, ams3
+s3_endpoint = "https://fra1.digitaloceanspaces.com"
+
+# DigitalOcean Spaces Keys
+# Получите в панели: DigitalOcean -> API -> Spaces Keys
+s3_access_key = "YOUR_DO_SPACES_ACCESS_KEY"
+s3_secret_key = "YOUR_DO_SPACES_SECRET_KEY"
+
+# ВАЖНО: При использовании DO Spaces создайте Space вручную с именем из s3_bucket_name
+# Например: callsum-prod-your-unique-suffix
+
+# === ИНСТРУКЦИЯ ПО НАСТРОЙКЕ DIGITALOCEAN SPACES ===
+# 1. Создайте аккаунт на digitalocean.com
+# 2. Перейдите: Manage -> Spaces -> Create Space
+# 3. Выберите регион (например: Frankfurt - fra1)
+# 4. Имя Space: такое же как s3_bucket_name выше
+# 5. Перейдите: API -> Spaces Keys -> Generate New Key
+# 6. Скопируйте Access Key и Secret Key в переменные выше
+# 7. Установите use_digitalocean_spaces = true
+# 8. Запустите terraform apply

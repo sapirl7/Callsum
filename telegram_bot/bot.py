@@ -30,8 +30,22 @@ SUPPORTED_AUDIO_FORMATS = {
     'audio/webm'
 }
 
-# AWS клиенты
-s3_client = boto3.client('s3')
+# AWS / S3-compatible клиенты
+# Поддержка DigitalOcean Spaces и других S3-совместимых хранилищ
+s3_config = {
+    'service_name': 's3',
+    'region_name': os.getenv('AWS_REGION', 'us-east-1')
+}
+
+# Если указан кастомный endpoint (например, DigitalOcean Spaces)
+if os.getenv('S3_ENDPOINT_URL'):
+    s3_config['endpoint_url'] = os.getenv('S3_ENDPOINT_URL')
+    # Используем явные credentials для DO Spaces
+    if os.getenv('AWS_ACCESS_KEY_ID') and os.getenv('AWS_SECRET_ACCESS_KEY'):
+        s3_config['aws_access_key_id'] = os.getenv('AWS_ACCESS_KEY_ID')
+        s3_config['aws_secret_access_key'] = os.getenv('AWS_SECRET_ACCESS_KEY')
+
+s3_client = boto3.client(**s3_config)
 secrets_client = boto3.client('secretsmanager')
 dynamodb = boto3.resource('dynamodb')
 

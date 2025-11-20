@@ -27,13 +27,18 @@ resource "aws_lambda_function" "telegram_bot" {
   memory_size = var.lambda_memory
 
   environment {
-    variables = {
+    variables = merge({
       # AWS Resources
-      S3_BUCKET_NAME           = aws_s3_bucket.callsum_storage.id
+      S3_BUCKET_NAME           = var.use_digitalocean_spaces ? var.s3_bucket_name : aws_s3_bucket.callsum_storage[0].id
       DYNAMODB_TABLE_NAME      = aws_dynamodb_table.callsum_jobs.name
       RATE_LIMITS_TABLE_NAME   = aws_dynamodb_table.rate_limits.name
       AWS_REGION               = var.aws_region
       ENVIRONMENT              = var.environment
+
+      # S3 / DigitalOcean Spaces Configuration
+      S3_ENDPOINT_URL          = var.use_digitalocean_spaces ? var.s3_endpoint : ""
+      AWS_ACCESS_KEY_ID        = var.use_digitalocean_spaces ? var.s3_access_key : ""
+      AWS_SECRET_ACCESS_KEY    = var.use_digitalocean_spaces ? var.s3_secret_key : ""
 
       # Secrets Manager ARNs (Lambda fetches actual values)
       TELEGRAM_BOT_TOKEN_SECRET_ARN = aws_secretsmanager_secret.telegram_bot_token.arn
@@ -58,7 +63,7 @@ resource "aws_lambda_function" "telegram_bot" {
       RETRY_MIN_WAIT_SECONDS        = "2"
       RETRY_MAX_WAIT_SECONDS        = "10"
       TELEGRAM_MAX_MESSAGE_LENGTH   = "4000"
-    }
+    }, {})
   }
 
   # Для продакшена можно добавить VPC config
