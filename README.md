@@ -2,7 +2,7 @@
 
 Облачный сервис для транскрипции, диаризации и анализа голосовых встреч с использованием AI.
 
-[![Production Ready](https://img.shields.io/badge/Production-Ready-green)](https://github.com/yourusername/callsum)
+![Production Ready](https://img.shields.io/badge/Production-Ready-green)
 [![AWS](https://img.shields.io/badge/AWS-Deployed-orange)](https://aws.amazon.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 

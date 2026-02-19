@@ -165,7 +165,7 @@ resource "aws_api_gateway_method_settings" "webhook" {
   settings {
     metrics_enabled    = true
     logging_level      = "INFO"
-    data_trace_enabled = false  # Не логируем тело запросов (конфиденциальность)
+    data_trace_enabled = true   # Разрешаем трейсинг для дебага вебхуков
 
     # Throttling (защита от DDoS)
     throttling_burst_limit = 100

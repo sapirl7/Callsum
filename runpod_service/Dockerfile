@@ -3,7 +3,7 @@
 FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
 
 # Метаданные
-LABEL maintainer="your-email@example.com"
+LABEL maintainer="admin"
 LABEL description="Callsum ML Service - Audio transcription, diarization, and summarization"
 
 # Отключаем интерактивные промпты

@@ -37,8 +37,7 @@ resource "aws_lambda_function" "telegram_bot" {
 
       # S3 / DigitalOcean Spaces Configuration
       S3_ENDPOINT_URL          = var.use_digitalocean_spaces ? var.s3_endpoint : ""
-      AWS_ACCESS_KEY_ID        = var.use_digitalocean_spaces ? var.s3_access_key : ""
-      AWS_SECRET_ACCESS_KEY    = var.use_digitalocean_spaces ? var.s3_secret_key : ""
+      DO_SPACES_SECRET_ARN     = var.use_digitalocean_spaces ? aws_secretsmanager_secret.do_spaces_keys[0].arn : ""
 
       # Secrets Manager ARNs (Lambda fetches actual values)
       TELEGRAM_BOT_TOKEN_SECRET_ARN = aws_secretsmanager_secret.telegram_bot_token.arn
@@ -47,9 +46,11 @@ resource "aws_lambda_function" "telegram_bot" {
       # Security: Secret token для защиты webhook от подделки
       TELEGRAM_SECRET_TOKEN = var.telegram_secret_token
 
-      # RunPod Configuration
-      RUNPOD_ENDPOINT_URL = var.runpod_endpoint_url
-      CALLBACK_URL        = "${aws_api_gateway_stage.webhook.invoke_url}/webhook"
+      # RunPod & Model Configuration
+      RUNPOD_ENDPOINT_URL      = var.runpod_endpoint_url
+      CALLBACK_URL             = "${aws_api_gateway_stage.webhook.invoke_url}/webhook"
+      WHISPER_LANGUAGE         = var.llm_language
+      CUSTOM_SYSTEM_PROMPT     = var.custom_system_prompt
 
       # Application Configuration (from config.py)
       MAX_AUDIO_DURATION_SECONDS    = "7200"

@@ -37,16 +37,22 @@ s3_config = {
     'region_name': os.getenv('AWS_REGION', 'us-east-1')
 }
 
+secrets_client = boto3.client('secretsmanager', region_name=os.getenv('AWS_REGION', 'us-east-1'))
+
 # Если указан кастомный endpoint (например, DigitalOcean Spaces)
 if os.getenv('S3_ENDPOINT_URL'):
     s3_config['endpoint_url'] = os.getenv('S3_ENDPOINT_URL')
-    # Используем явные credentials для DO Spaces
-    if os.getenv('AWS_ACCESS_KEY_ID') and os.getenv('AWS_SECRET_ACCESS_KEY'):
-        s3_config['aws_access_key_id'] = os.getenv('AWS_ACCESS_KEY_ID')
-        s3_config['aws_secret_access_key'] = os.getenv('AWS_SECRET_ACCESS_KEY')
+    do_spaces_arn = os.getenv('DO_SPACES_SECRET_ARN')
+    if do_spaces_arn:
+        try:
+            response = secrets_client.get_secret_value(SecretId=do_spaces_arn)
+            secret = json.loads(response['SecretString'])
+            s3_config['aws_access_key_id'] = secret.get('access_key')
+            s3_config['aws_secret_access_key'] = secret.get('secret_key')
+        except Exception as e:
+            logger.error(f"Errored loading DO spaces credentials: {e}")
 
 s3_client = boto3.client(**s3_config)
-secrets_client = boto3.client('secretsmanager')
 dynamodb = boto3.resource('dynamodb')
 
 # Конфигурация из переменных окружения
@@ -417,10 +423,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик голосовых сообщений"""
+    """Обработчик голосовых сообщений и аудио"""
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
-    voice = update.message.voice
+    voice = update.message.voice or update.message.audio
+
+    if not voice:
+        return
 
     # Проверка rate limit
     rate_limit_check = check_rate_limit(user_id)
@@ -530,8 +539,7 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"Ошибка обработки голосового: {e}", exc_info=True)
         await update.message.reply_text(
             f"❌ *Ошибка загрузки*\n\n"
-            f"Попробуйте еще раз или обратитесь в поддержку.\n"
-            f"Код ошибки: {str(e)[:100]}",
+            f"Попробуйте еще раз или обратитесь в поддержку.",
             parse_mode='Markdown'
         )
 
@@ -842,7 +850,7 @@ def lambda_handler(event, context):
             application.add_handler(CommandHandler("start", start_command))
             application.add_handler(CommandHandler("help", help_command))
             application.add_handler(CommandHandler("status", status_command))
-            application.add_handler(MessageHandler(filters.VOICE, voice_handler))
+            application.add_handler(MessageHandler(filters.VOICE | filters.AUDIO, voice_handler))
 
             # Обрабатываем webhook от Telegram
             if 'body' in event:
@@ -865,7 +873,7 @@ def lambda_handler(event, context):
         logger.error(f"Lambda handler error: {e}", exc_info=True)
         return {
             'statusCode': 500,
-            'body': json.dumps(f'Error: {str(e)}')
+            'body': json.dumps('Server error')
         }
 
 

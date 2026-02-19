@@ -117,3 +117,17 @@ variable "s3_secret_key" {
   sensitive   = true
   default     = ""
 }
+
+# === AI Models Configuration ===
+
+variable "llm_language" {
+  description = "Язык для транскрипции Whisper (например, 'ru', 'en')"
+  type        = string
+  default     = "ru"
+}
+
+variable "custom_system_prompt" {
+  description = "Пользовательский системный промпт для саммаризации (оставьте пустым для дефолтного)"
+  type        = string
+  default     = ""
+}

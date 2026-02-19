@@ -6,7 +6,6 @@ RunPod Serverless Handler - обработка аудио через ML моде
 import os
 import json
 import torch
-import boto3
 import tempfile
 import logging
 import httpx
@@ -17,20 +16,6 @@ from vllm import LLM, SamplingParams
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# AWS / S3-compatible клиент (поддержка DigitalOcean Spaces)
-s3_config = {
-    'service_name': 's3',
-    'aws_access_key_id': os.getenv('AWS_ACCESS_KEY_ID'),
-    'aws_secret_access_key': os.getenv('AWS_SECRET_ACCESS_KEY'),
-    'region_name': os.getenv('AWS_REGION', 'us-east-1')
-}
-
-# Если указан кастомный endpoint (DigitalOcean Spaces)
-if os.getenv('S3_ENDPOINT_URL'):
-    s3_config['endpoint_url'] = os.getenv('S3_ENDPOINT_URL')
-
-s3_client = boto3.client(**s3_config)
 
 # Определение устройства
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -189,26 +174,6 @@ def format_dialogue_for_llm(dialogue):
     return "\n\n".join(lines)
 
 
-def download_from_s3(bucket, key, local_path):
-    """Скачивает файл из S3"""
-    logger.info(f"Скачивание из S3: {bucket}/{key}")
-    s3_client.download_file(bucket, key, local_path)
-    logger.info(f"Файл скачан в {local_path}")
-
-
-def upload_to_s3(bucket, key, data):
-    """Загружает JSON результат в S3"""
-    logger.info(f"Загрузка результата в S3: {bucket}/{key}")
-    s3_client.put_object(
-        Bucket=bucket,
-        Key=key,
-        Body=json.dumps(data, ensure_ascii=False, indent=2),
-        ContentType='application/json',
-        ServerSideEncryption='AES256'
-    )
-    logger.info("Результат загружен ✓")
-
-
 # === PROGRESS UPDATES ===
 
 def send_progress_update(callback_url: str, job_id: str, chat_id: str, progress: int, message: str):
@@ -276,9 +241,7 @@ def handler(job):
                     f.write(response.content)
             logger.info("Аудио скачано через presigned URL ✓")
         else:
-            # Fallback: используем AWS credentials (legacy)
-            logger.warning("Используется legacy метод с AWS credentials")
-            download_from_s3(s3_bucket, s3_key, audio_path)
+            raise ValueError("audio_download_url is missing. Legacy AWS credentials are no longer supported in RunPod.")
 
         # 2. Транскрипция (параллельно с диаризацией)
         send_progress_update(callback_url, job_id, chat_id, 20, "🎙 Транскрибирую речь...")
@@ -404,25 +367,9 @@ def handler(job):
                 response.raise_for_status()
             logger.info("Результат загружен через presigned URL ✓")
         else:
-            # Fallback: используем AWS credentials (legacy)
-            logger.warning("Используется legacy метод для загрузки результата")
-            if not result_key:
-                result_key = f"users/{user_id}/results/{job_id}.json"
-            upload_to_s3(s3_bucket, result_key, result)
+            raise ValueError("result_upload_url is missing. Legacy AWS credentials are no longer supported in RunPod.")
 
-        # 8. Перемещаем аудио в processed (только если используем AWS credentials)
-        if s3_bucket and s3_key and not audio_download_url:
-            # Это legacy path - с presigned URLs аудио остается в /new/
-            processed_key = s3_key.replace('/new/', '/processed/')
-            s3_client.copy_object(
-                Bucket=s3_bucket,
-                CopySource={'Bucket': s3_bucket, 'Key': s3_key},
-                Key=processed_key
-            )
-            s3_client.delete_object(Bucket=s3_bucket, Key=s3_key)
-            logger.info("Аудио перемещено в processed/")
-
-        # 9. Отправляем callback (опционально)
+        # 8. Отправляем callback (опционально)
         callback_url = job_input.get('callback_url')
         if callback_url and chat_id:
             try:
@@ -467,8 +414,16 @@ def handler(job):
             "error": str(e)
         }
 
-        result_key = f"users/{user_id}/results/{job_id}.json"
-        upload_to_s3(s3_bucket, result_key, error_result)
+        if result_upload_url:
+            try:
+                with httpx.Client(timeout=60.0) as client:
+                    client.put(
+                        result_upload_url,
+                        data=json.dumps(error_result).encode('utf-8'),
+                        headers={'Content-Type': 'application/json'}
+                    )
+            except Exception as upload_error:
+                logger.error(f"Ошибка загрузки результата ошибки: {upload_error}")
 
         # Отправляем callback об ошибке
         callback_url = job_input.get('callback_url')

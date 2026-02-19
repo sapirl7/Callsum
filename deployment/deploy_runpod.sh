@@ -36,7 +36,7 @@ echo ""
 # Переменные
 DOCKER_IMAGE="callsum/ml-service"
 TAG="latest"
-DOCKER_REGISTRY="your-docker-registry"  # Docker Hub или AWS ECR
+DOCKER_REGISTRY="your-registry"  # Docker Hub или AWS ECR
 
 # Переходим в директорию runpod_service
 cd "$(dirname "$0")/../runpod_service"

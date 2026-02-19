@@ -79,19 +79,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "callsum_storage" {
   }
 }
 
-# CORS конфигурация (если будет веб-интерфейс)
-resource "aws_s3_bucket_cors_configuration" "callsum_storage" {
-  count  = var.use_digitalocean_spaces ? 0 : 1
-  bucket = aws_s3_bucket.callsum_storage[0].id
-
-  cors_rule {
-    allowed_headers = ["*"]
-    allowed_methods = ["GET", "PUT", "POST"]
-    allowed_origins = ["*"]  # В продакшене указать конкретные домены
-    expose_headers  = ["ETag"]
-    max_age_seconds = 3000
-  }
-}
 
 # Outputs
 output "s3_bucket_name" {

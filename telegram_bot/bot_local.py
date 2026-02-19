@@ -4,6 +4,7 @@
 Для разработки и отладки перед деплоем на AWS Lambda.
 """
 import asyncio
+from telegram import Update
 from telegram.ext import Application
 from bot import (
     start_command,
@@ -34,7 +35,7 @@ async def main():
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("status", status_command))
-    application.add_handler(MessageHandler(filters.VOICE, voice_handler))
+    application.add_handler(MessageHandler(filters.VOICE | filters.AUDIO, voice_handler))
 
     # Запускаем polling
     await application.initialize()
@@ -56,5 +57,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    from telegram import Update
     asyncio.run(main())

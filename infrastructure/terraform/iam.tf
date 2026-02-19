@@ -45,14 +45,14 @@ resource "aws_iam_role_policy" "lambda_telegram_bot_policy" {
           "s3:DeleteObject",
           "s3:PutObjectAcl"
         ]
-        Resource = "${aws_s3_bucket.callsum_storage.arn}/*"
+        Resource = try("${aws_s3_bucket.callsum_storage[0].arn}/*", "arn:aws:s3:::*")
       },
       {
         Effect = "Allow"
         Action = [
           "s3:ListBucket"
         ]
-        Resource = aws_s3_bucket.callsum_storage.arn
+        Resource = try(aws_s3_bucket.callsum_storage[0].arn, "arn:aws:s3:::*")
       },
       # DynamoDB доступ
       {
@@ -76,10 +76,11 @@ resource "aws_iam_role_policy" "lambda_telegram_bot_policy" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = [
+        Resource = compact([
           aws_secretsmanager_secret.telegram_bot_token.arn,
-          aws_secretsmanager_secret.runpod_api_key.arn
-        ]
+          aws_secretsmanager_secret.runpod_api_key.arn,
+          try(aws_secretsmanager_secret.do_spaces_keys[0].arn, "")
+        ])
       }
     ]
   })

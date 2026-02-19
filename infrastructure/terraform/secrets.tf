@@ -72,3 +72,30 @@ output "runpod_api_key_arn" {
   description = "ARN секрета с RunPod API Key"
   value       = aws_secretsmanager_secret.runpod_api_key.arn
 }
+
+# DigitalOcean Spaces Credentials (опционально)
+resource "aws_secretsmanager_secret" "do_spaces_keys" {
+  count       = var.use_digitalocean_spaces ? 1 : 0
+  name        = "${local.project_name}/do-spaces-keys-${var.environment}"
+  description = "DigitalOcean Spaces Credentials"
+
+  recovery_window_in_days = 7
+
+  tags = merge(local.common_tags, {
+    Name = "DO Spaces Credentials"
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "do_spaces_keys" {
+  count     = var.use_digitalocean_spaces ? 1 : 0
+  secret_id = aws_secretsmanager_secret.do_spaces_keys[0].id
+  secret_string = jsonencode({
+    access_key = var.s3_access_key
+    secret_key = var.s3_secret_key
+  })
+}
+
+output "do_spaces_keys_arn" {
+  description = "ARN секрета с DO Spaces ключами"
+  value       = var.use_digitalocean_spaces ? aws_secretsmanager_secret.do_spaces_keys[0].arn : ""
+}
