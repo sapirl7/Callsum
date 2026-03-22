@@ -1,13 +1,2 @@
-# Core ML Models
-torch==2.2.0
-faster-whisper==0.10.0
-pyannote.audio==3.1.1
-
-# LLM Integration
-ollama==0.1.6
-
-# Utilities
-python-dotenv==1.0.0
-
-# Testing
-pytest==7.4.3
+-r telegram_bot/requirements.txt
+pytest==8.3.5

@@ -1,0 +1,9 @@
+.git
+.gitignore
+.DS_Store
+__pycache__/
+*.pyc
+.env
+.terraform/
+telegram_bot/build/
+infrastructure/terraform/telegram_bot_lambda.zip

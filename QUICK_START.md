@@ -1,5 +1,8 @@
 # ⚡ Callsum - Быстрый Старт
 
+> Статус: вспомогательный quick-start.
+> Канонические handoff-материалы: `docs/HANDOFF_CHECKLIST.md`, `docs/PROJECT_STATUS.md`, `docs/DEPLOYMENT_GUIDE.md`.
+
 ## 🎯 Что это?
 
 **Callsum** - AI-сервис для автоматической обработки аудио встреч:
@@ -253,12 +256,12 @@ RUNPOD_TIMEOUT_SECONDS = 7200  # 2 часа
 # Проверка логов
 aws logs tail /aws/lambda/callsum-lambda-telegram-bot-prod --follow
 
-# Обновление Lambda кода
-cd telegram_bot
-zip -r lambda_function.zip bot.py
-aws lambda update-function-code \
-  --function-name callsum-lambda-telegram-bot-prod \
-  --zip-file fileb://lambda_function.zip
+# Пересборка Lambda package
+./deployment/build_lambda_package.sh
+
+# Применение обновленного артефакта
+cd infrastructure/terraform
+terraform apply
 
 # Проверка стоимости
 # AWS Console → Cost Explorer

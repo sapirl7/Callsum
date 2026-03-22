@@ -145,6 +145,7 @@ REQUIRED_FILES=(
     "runpod_service/requirements.txt"
     "runpod_service/Dockerfile"
     "config.py"
+    "deployment/build_lambda_package.sh"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
@@ -154,6 +155,12 @@ for file in "${REQUIRED_FILES[@]}"; do
         error "Отсутствует: $file"
     fi
 done
+
+if [ -d "telegram_bot/build/lambda" ]; then
+    success "Lambda build directory найден: telegram_bot/build/lambda"
+else
+    warn "Lambda build directory отсутствует. Запустите: ./deployment/build_lambda_package.sh"
+fi
 
 echo ""
 echo "5. Проверка Python зависимостей..."

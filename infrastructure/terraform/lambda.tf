@@ -3,14 +3,8 @@
 # Архив с кодом Lambda (предполагается что код уже собран)
 data "archive_file" "telegram_bot_lambda" {
   type        = "zip"
-  source_dir  = "${path.module}/../../telegram_bot"
+  source_dir  = "${path.module}/../../telegram_bot/build/lambda"
   output_path = "${path.module}/telegram_bot_lambda.zip"
-  excludes = [
-    "bot_local.py",
-    "__pycache__",
-    "*.pyc",
-    ".env"
-  ]
 }
 
 # Lambda функция
@@ -45,6 +39,7 @@ resource "aws_lambda_function" "telegram_bot" {
 
       # Security: Secret token для защиты webhook от подделки
       TELEGRAM_SECRET_TOKEN = var.telegram_secret_token
+      RUNPOD_CALLBACK_TOKEN = var.runpod_callback_token != "" ? var.runpod_callback_token : var.telegram_secret_token
 
       # RunPod & Model Configuration
       RUNPOD_ENDPOINT_URL      = var.runpod_endpoint_url

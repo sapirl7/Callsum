@@ -24,6 +24,13 @@ variable "telegram_secret_token" {
   sensitive   = true
 }
 
+variable "runpod_callback_token" {
+  description = "Отдельный token для аутентификации callback запросов от RunPod. Если пусто, используется telegram_secret_token."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "hf_token" {
   description = "Hugging Face Token для Pyannote"
   type        = string

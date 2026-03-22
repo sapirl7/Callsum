@@ -7,8 +7,8 @@ output "summary" {
     webhook_url = "${aws_api_gateway_stage.webhook.invoke_url}/webhook"
 
     # Storage
-    s3_bucket      = aws_s3_bucket.callsum_storage.id
-    s3_bucket_arn  = aws_s3_bucket.callsum_storage.arn
+    s3_bucket      = var.use_digitalocean_spaces ? var.s3_bucket_name : aws_s3_bucket.callsum_storage[0].id
+    s3_bucket_arn  = var.use_digitalocean_spaces ? "N/A (using DigitalOcean Spaces)" : aws_s3_bucket.callsum_storage[0].arn
 
     # Database
     dynamodb_table = aws_dynamodb_table.callsum_jobs.name
@@ -44,9 +44,9 @@ output "next_steps" {
     2. Проверьте webhook:
        curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
 
-    3. Деплой Docker контейнера на RunPod:
-       cd runpod_service
-       ./deploy.sh
+     3. Деплой Docker контейнера на RunPod:
+       cd deployment
+       ./deploy_runpod.sh
 
     4. Протестируйте бота:
        Отправьте /start боту в Telegram
@@ -56,8 +56,8 @@ output "next_steps" {
        - DynamoDB: ${aws_dynamodb_table.callsum_jobs.name}
 
     📊 DASHBOARD:
-    S3 Bucket: ${aws_s3_bucket.callsum_storage.id}
-    Lambda: ${aws_lambda_function.telegram_bot.function_name}
+     S3 Bucket: ${var.use_digitalocean_spaces ? var.s3_bucket_name : aws_s3_bucket.callsum_storage[0].id}
+     Lambda: ${aws_lambda_function.telegram_bot.function_name}
 
   EOT
 }

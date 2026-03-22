@@ -2,7 +2,7 @@
 
 Облачный сервис для транскрипции, диаризации и анализа голосовых встреч с использованием AI.
 
-![Production Ready](https://img.shields.io/badge/Production-Ready-green)
+![Deployment Candidate](https://img.shields.io/badge/Status-Deployment--Candidate-orange)
 [![AWS](https://img.shields.io/badge/AWS-Deployed-orange)](https://aws.amazon.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -22,10 +22,10 @@
 ### 🎯 Основной функционал
 - **Транскрипция** - Whisper large-v3 для точного распознавания речи (русский язык)
 - **Диаризация** - Pyannote 3.1 для определения спикеров
-- **AI Анализ** - Llama 3 70B для генерации структурированных саммари
+- **AI Анализ** - Llama 3.1 8B Instruct для генерации структурированных саммари
 - **Telegram Bot** - Удобный интерфейс для загрузки аудио
 
-### 🏗️ Production-ready возможности
+### 🏗️ Операционные возможности
 - ✅ **Rate Limiting** - защита от злоупотреблений (10 req/hour, 50 req/day)
 - ✅ **Presigned URLs** - безопасная работа с S3 без передачи credentials
 - ✅ **Progress Updates** - real-time уведомления о ходе обработки
@@ -307,6 +307,9 @@ curl https://your-api-gateway-url/health
 
 ## 📚 Документация
 
+- [Documentation Map](docs/README.md) - каноническая карта документации
+- [Handoff Checklist](docs/HANDOFF_CHECKLIST.md) - финальный чеклист передачи заказчику
+- [Project Status](docs/PROJECT_STATUS.md) - что проверено локально и что ещё нужно проверить на staging
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) - Детальное руководство по деплою
 - [Architecture](docs/ARCHITECTURE.md) - Подробная архитектура
 - [API Reference](docs/API.md) - API документация

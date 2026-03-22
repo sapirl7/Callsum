@@ -8,6 +8,7 @@ env/
 
 # Системные файлы macOS и Python
 .DS_Store
+.pycache/
 __pycache__/
 *.pyc
 
@@ -22,8 +23,12 @@ terraform.tfstate.backup
 
 # Игнорируем логи, НЕ requirements
 *.log
+outputs.json
 
 # Terraform
 .terraform/
 *.tfvars
 !*.tfvars.example
+
+# Build artifacts
+telegram_bot/build/

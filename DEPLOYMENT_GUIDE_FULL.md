@@ -1,5 +1,8 @@
 # 🚀 Полное руководство по деплою Callsum
 
+> Статус: подробный расширенный гайд.
+> Для handoff и финальной приёмки используйте `docs/HANDOFF_CHECKLIST.md` и `docs/PROJECT_STATUS.md`.
+
 ## Обзор архитектуры
 
 **Callsum** использует гибридную cloud-архитектуру:
@@ -299,15 +302,10 @@ summary = {
 ### 2.7 Упаковка Lambda кода
 
 ```bash
-cd ../../telegram_bot
-zip -r lambda_function.zip bot.py
-```
+./deployment/build_lambda_package.sh
 
-**Загрузите в Lambda:**
-```bash
-aws lambda update-function-code \
-  --function-name callsum-lambda-telegram-bot-prod \
-  --zip-file fileb://lambda_function.zip
+cd infrastructure/terraform
+terraform apply
 ```
 
 ---
@@ -643,11 +641,10 @@ curl "https://api.telegram.org/bot<токен>/getWebhookInfo"
 ### 8.1 Обновление Lambda кода
 
 ```bash
-cd telegram_bot
-zip -r lambda_function.zip bot.py
-aws lambda update-function-code \
-  --function-name callsum-lambda-telegram-bot-prod \
-  --zip-file fileb://lambda_function.zip
+./deployment/build_lambda_package.sh
+
+cd infrastructure/terraform
+terraform apply
 ```
 
 ---

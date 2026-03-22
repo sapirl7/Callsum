@@ -1,8 +1,12 @@
-# 🚀 Callsum - Готов к деплою!
+# 🚀 Callsum - Deployment Summary
+
+> Статус: исторический summary-файл.
+> Не используйте его как единственный источник истины.
+> Канонические handoff-материалы: `docs/HANDOFF_CHECKLIST.md`, `docs/PROJECT_STATUS.md`, `docs/DEPLOYMENT_GUIDE.md`.
 
 ## 📊 Что было сделано
 
-Проект **полностью готов к production деплою** после серии аудитов и исправлений.
+Проект приведён к состоянию **deployment candidate**: критические блокеры исправлены в коде и IaC, но перед передачей заказчику нужен один staging/E2E прогон с реальными секретами и облаком.
 
 ---
 
@@ -280,11 +284,9 @@ RUNPOD_TIMEOUT_SECONDS = 7200  # 2 часа
 
 ### Lambda код
 ```bash
-cd telegram_bot
-zip -r lambda_function.zip bot.py
-aws lambda update-function-code \
-  --function-name callsum-lambda-telegram-bot-prod \
-  --zip-file fileb://lambda_function.zip
+./deployment/build_lambda_package.sh
+cd infrastructure/terraform
+terraform apply
 ```
 
 ### RunPod образ
@@ -297,6 +299,13 @@ docker push <username>/callsum-ml:latest
 
 ### Инфраструктура
 ```bash
+cd infrastructure/terraform
+terraform apply
+```
+
+### Lambda package
+```bash
+./deployment/build_lambda_package.sh
 cd infrastructure/terraform
 terraform apply
 ```
@@ -360,7 +369,7 @@ terraform destroy
 
 ## 🎉 Готово!
 
-Проект **Callsum** полностью готов к production использованию.
+Проект **Callsum** доведён до состояния deployment candidate и готов к финальному staging/E2E прогону перед передачей заказчику.
 
 **Что было достигнуто:**
 - ✅ Безопасная архитектура

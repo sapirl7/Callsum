@@ -1,4 +1,7 @@
-# 🚀 CALLSUM - Production Ready Version
+# 🚀 CALLSUM - Deployment Guide
+
+> Статус: расширенный обзорный гайд.
+> Канонические handoff-материалы: `docs/HANDOFF_CHECKLIST.md`, `docs/PROJECT_STATUS.md`, `docs/DEPLOYMENT_GUIDE.md`.
 
 **Secure, Scalable Call Transcription & Summarization System**
 
@@ -8,7 +11,7 @@
 
 - 🎯 **Транскрипция** - Whisper large-v3 (русский язык)
 - 👥 **Диаризация** - определение спикеров (Pyannote 3.1)
-- 📋 **Структурированное саммари** - Llama 3 70B
+- 📋 **Структурированное саммари** - Llama 3.1 8B
   - Блок "Коммерция"
   - Блок "Операционка"
   - Блок "Техника"
@@ -23,8 +26,7 @@
 
 ```
 Callsum/
-├── pipeline.py                 # Старый MVP (локальный)
-├── requirements.txt            # Зависимости для MVP
+├── requirements.txt            # Dev/test зависимости
 │
 ├── telegram_bot/               # Telegram бот (AWS Lambda)
 │   ├── bot.py                  # Lambda handler
@@ -166,7 +168,7 @@ curl -X POST "https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook" \
     │  ┌──────────────┐  │
     │  │ Whisper STT  │  │
     │  │ Pyannote     │  │
-    │  │ Llama 3 70B  │  │
+    │  │ Llama 3.1 8B │  │
     │  └──────────────┘  │
     └────────────────────┘
 ```
@@ -236,7 +238,7 @@ docker run --gpus all callsum/ml-service:latest
 
 ## 📝 Changelog
 
-### v2.0.0 (Production Ready)
+### v2.0.0 (Deployment Candidate)
 - ✅ Telegram бот (AWS Lambda)
 - ✅ RunPod Serverless интеграция
 - ✅ Terraform IaC

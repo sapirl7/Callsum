@@ -31,6 +31,11 @@ fi
 echo -e "${GREEN}✅ Все зависимости установлены${NC}"
 echo ""
 
+# Сборка Lambda пакета с зависимостями
+echo "📦 Сборка Lambda пакета..."
+"$(dirname "$0")/build_lambda_package.sh"
+echo ""
+
 # Переходим в директорию Terraform
 cd "$(dirname "$0")/../infrastructure/terraform"
 

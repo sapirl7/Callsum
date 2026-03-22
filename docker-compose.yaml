@@ -1,27 +1,13 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  app:
+  telegram_bot:
     build: .
-    container_name: callsum_app
-    volumes:
-      - .:/app
-      # Эта строка подключает "вечную флешку" для кэша моделей
-      - model_cache:/root/.cache
-    depends_on:
-      - ollama
+    container_name: callsum_telegram_bot_local
     env_file:
       - .env
-
-  ollama:
-    image: ollama/ollama
-    container_name: ollama
     volumes:
-      - ollama_data:/root/.ollama
-    ports:
-      - "11434:11434"
-
-# Здесь мы объявляем наши "вечные флешки"
-volumes:
-  ollama_data:
-  model_cache:
+      - ./telegram_bot:/app/telegram_bot
+    working_dir: /app/telegram_bot
+    command: ["python", "bot_local.py"]
+    restart: unless-stopped

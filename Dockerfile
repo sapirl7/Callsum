@@ -1,15 +1,14 @@
 FROM python:3.12-slim
 
-# Устанавливаем системные зависимости для аудио
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
-    libsndfile1 \
-    && rm -rf /var/lib/apt/lists/*
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
 
-# Запускаем основной скрипт
-CMD ["python", "pipeline.py"]
+COPY telegram_bot/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+COPY telegram_bot /app/telegram_bot
+
+WORKDIR /app/telegram_bot
+
+CMD ["python", "bot_local.py"]
