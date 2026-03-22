@@ -1,53 +1,54 @@
-# Project Status
+<![CDATA[# Project Status
 
-Дата актуализации: 22 марта 2026
+Last updated: March 22, 2026
 
-## Текущее состояние
+## Current State
 
-Проект находится в состоянии `deployment candidate`.
-Критические блокеры из аудита закрыты в коде и IaC, но production readiness всё ещё зависит от одного внешнего staging/E2E прогона с реальными облачными ресурсами.
+The project is a **deployment candidate**.
+Critical blockers from the audit have been resolved in code and IaC, but production readiness still depends on a staging/E2E run with real cloud resources.
 
-## Что исправлено
+## What Has Been Fixed
 
-- RunPod worker теперь запускается как настоящий serverless worker.
-- Telegram bot больше не зависит от import-time AWS side effects.
-- RunPod callback теперь аутентифицируется отдельным token-ом.
-- Lambda теперь пакуется вместе с Python зависимостями.
-- Terraform outputs исправлены для сценария с `count` и DO Spaces.
-- Корневые Docker/dev-файлы больше не ссылаются на удалённый `pipeline.py` и старый Ollama flow.
-- Псевдо-тесты заменены на реальные smoke-contract tests.
+- RunPod worker now runs as a proper serverless worker.
+- Telegram bot no longer depends on import-time AWS side effects.
+- RunPod callback is authenticated with a dedicated token.
+- Lambda is now packaged together with Python dependencies.
+- Terraform outputs have been fixed for `count`-based resources and DO Spaces.
+- Root Docker/dev files no longer reference the deleted `pipeline.py` or old Ollama flow.
+- Placeholder tests have been replaced with real smoke/contract tests.
 
-## Что проверено локально
+## Verified Locally
 
-- Синтаксис Python через `py_compile`.
-- Smoke-contract tests через `python3 -m unittest test_llm test_stt test_deployment_contracts`.
-- Актуальность ключевых handoff и deployment docs.
+- Python syntax via `py_compile`.
+- Smoke-contract tests via `python3 -m unittest test_llm test_stt test_deployment_contracts`.
+- Accuracy of key handoff and deployment docs.
 
-## Что не проверено в этом репозитории автоматически
+## Not Verified in This Repository
 
-- Реальный `terraform apply`.
-- Build/push Docker image в registry.
-- Реальное создание RunPod endpoint.
-- Telegram webhook с боевым bot token.
-- Полный e2e цикл от голосового сообщения до итогового summary в Telegram.
+- Real `terraform apply`.
+- Docker image build/push to a registry.
+- Real RunPod endpoint creation.
+- Telegram webhook with a live bot token.
+- Full E2E cycle from voice message to final summary in Telegram.
 
-## Остаточные риски
+## Remaining Risks
 
-- Любые реальные сетевые/облачные проблемы будут видны только на staging.
-- Стоимость и производительность RunPod зависят от выбранного GPU и cold start профиля.
-- Локальный режим без AWS всё ещё ограничен: для полной обработки нужен доступ к storage/DynamoDB/RunPod.
+- Any real network/cloud issues will only surface on staging.
+- RunPod cost and performance depend on the selected GPU and cold-start profile.
+- Local mode without AWS is limited: full processing requires access to storage/DynamoDB/RunPod.
 
-## Канонические документы
+## Canonical Documents
 
 - `README.md`
 - `docs/README.md`
 - `docs/HANDOFF_CHECKLIST.md`
 - `docs/DEPLOYMENT_GUIDE.md`
 
-## Документы вспомогательного характера
+## Supplementary Documents
 
 - `QUICK_START.md`
 - `DEPLOYMENT_GUIDE_FULL.md`
 - `DEPLOYMENT_README.md`
 - `README_DEPLOYMENT.md`
 - `presentation.html`
+]]>

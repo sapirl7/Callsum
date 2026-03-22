@@ -1,95 +1,96 @@
-# Handoff Checklist
+<![CDATA[# Handoff Checklist
 
-Дата актуализации: 22 марта 2026
+Last updated: March 22, 2026
 
-Этот чеклист предназначен для финальной передачи проекта заказчику.
+This checklist is intended for the final project handoff to the client.
 
-## 1. Финальная подготовка репозитория
+## 1. Repository Preparation
 
-- Убедиться, что в рабочем дереве нет временных файлов, локальных секретов и build-артефактов.
-- Зафиксировать commit/tag, который передается заказчику.
-- Проверить, что заказчику передается именно этот commit/tag, а не “последнее локальное состояние”.
+- Ensure no temporary files, local secrets, or build artifacts remain in the working tree.
+- Tag the commit being delivered to the client.
+- Verify the client receives this exact commit/tag, not just "the latest local state".
 
-## 2. Локальные проверки перед деплоем
+## 2. Local Pre-Deploy Checks
 
-- Выполнить `python3 -m unittest test_llm test_stt test_deployment_contracts`.
-- Выполнить `./deployment/build_lambda_package.sh`.
-- При необходимости локального бота проверить `.env` и запуск `docker compose up` или `python3 telegram_bot/bot_local.py`.
+- Run `python3 -m unittest test_llm test_stt test_deployment_contracts`.
+- Run `./deployment/build_lambda_package.sh`.
+- If testing the bot locally, check `.env` and run `docker compose up` or `python3 telegram_bot/bot_local.py`.
 
-## 3. Инфраструктура AWS
+## 3. AWS Infrastructure
 
-- Перейти в `infrastructure/terraform`.
-- Проверить `terraform.tfvars` или `runpod.auto.tfvars`.
-- Выполнить `terraform init`.
-- Выполнить `terraform plan`.
-- Выполнить `terraform apply`.
-- Сохранить outputs после применения.
+- Navigate to `infrastructure/terraform`.
+- Verify `terraform.tfvars` (or `runpod.auto.tfvars`).
+- Run `terraform init`.
+- Run `terraform plan`.
+- Run `terraform apply`.
+- Save outputs after applying.
 
 ## 4. RunPod
 
-- Запустить `./deployment/deploy_runpod.sh`.
-- Убедиться, что endpoint отвечает на `{"input":{"test":true}}`.
-- Проверить, что в RunPod environment variables заданы:
+- Run `./deployment/deploy_runpod.sh`.
+- Confirm the endpoint responds to `{"input": {"test": true}}`.
+- Verify RunPod environment variables:
   - `HF_TOKEN`
-- Проверить, что в Lambda environment variables заданы:
+- Verify Lambda environment variables:
   - `RUNPOD_ENDPOINT_URL`
-  - `RUNPOD_API_KEY_SECRET_ARN` или `RUNPOD_API_KEY`
+  - `RUNPOD_API_KEY_SECRET_ARN` or `RUNPOD_API_KEY`
   - `RUNPOD_CALLBACK_TOKEN`
 
-## 5. Telegram webhook
+## 5. Telegram Webhook
 
-- Установить webhook через Telegram Bot API.
-- Передать тот же `secret_token`, что используется в `TELEGRAM_SECRET_TOKEN`.
-- Проверить `getWebhookInfo` и убедиться, что нет `last_error_message`.
+- Set the webhook via the Telegram Bot API.
+- Pass the same `secret_token` used in `TELEGRAM_SECRET_TOKEN`.
+- Check `getWebhookInfo` and ensure there is no `last_error_message`.
 
-## 6. Smoke test end-to-end
+## 6. End-to-End Smoke Test
 
-- Отправить `/start`.
-- Отправить короткое голосовое сообщение 15-60 секунд.
-- Убедиться, что задача получает `job_id`.
-- Убедиться, что прогресс обновляется или `/status <job_id>` показывает движение.
-- Убедиться, что приходит итоговое summary и `transcript.txt`.
-- Проверить, что результат записан в storage по пути `users/<user_id>/results/<job_id>.json`.
+- Send `/start`.
+- Send a short voice message (15–60 seconds).
+- Confirm the job receives a `job_id`.
+- Confirm progress updates appear (or `/status <job_id>` shows progression).
+- Confirm the final summary and `transcript.txt` are delivered.
+- Verify the result is stored at `users/<user_id>/results/<job_id>.json`.
 
-## 7. Операционная проверка
+## 7. Operational Verification
 
-- Проверить CloudWatch logs Lambda.
-- Проверить RunPod logs для worker-а.
-- Проверить DynamoDB записи jobs и rate-limits.
-- Проверить `GET /health`.
-- Проверить, что API Gateway не пишет body trace в CloudWatch.
+- Check CloudWatch logs for Lambda.
+- Check RunPod logs for the worker.
+- Check DynamoDB records (jobs and rate-limits).
+- Test `GET /health`.
+- Verify API Gateway does not log body traces to CloudWatch.
 
-## 8. Что передать заказчику
+## 8. What to Deliver
 
-- Ссылку на репозиторий или архив с конкретным commit/tag.
-- Инструкцию, какие документы читать в первую очередь:
+- Link to the repository or archive with the specific commit/tag.
+- Instructions on which documents to read first:
   - `README.md`
   - `docs/HANDOFF_CHECKLIST.md`
   - `docs/PROJECT_STATUS.md`
   - `docs/DEPLOYMENT_GUIDE.md`
-- Шаблон конфигурации:
+- Configuration templates:
   - `infrastructure/terraform/terraform.tfvars.example`
   - `.env.example`
-- Список секретов, которые должны быть заведены отдельно и не хранятся в git.
-- Краткий список облачных ресурсов:
+- List of secrets that must be provisioned separately (not stored in git).
+- Summary of cloud resources:
   - AWS Lambda
   - API Gateway
   - DynamoDB
-  - S3 или DigitalOcean Spaces
+  - S3 or DigitalOcean Spaces
   - RunPod endpoint
   - Secrets Manager
 
-## 9. Что не передавать в git
+## 9. What NOT to Commit
 
-- Реальные `terraform.tfvars`
-- Реальные `.env`
+- Real `terraform.tfvars`
+- Real `.env`
 - API keys / bot tokens / callback tokens
-- `runpod.auto.tfvars`, если он содержит боевые ключи
+- `runpod.auto.tfvars` if it contains production keys
 
-## 10. Критерий завершения handoff
+## 10. Handoff Completion Criteria
 
-- Заказчик может развернуть проект по документации без устных пояснений.
-- Есть один проверенный deploy path.
-- Есть один проверенный smoke test.
-- Все секреты вынесены из репозитория.
-- Передан конкретный commit/tag и список внешних ресурсов.
+- The client can deploy the project using the documentation alone, without verbal explanations.
+- There is one verified deploy path.
+- There is one verified smoke test.
+- All secrets are removed from the repository.
+- A specific commit/tag and list of external resources have been delivered.
+]]>
