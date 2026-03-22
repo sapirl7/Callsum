@@ -38,7 +38,7 @@
 
 These are not blockers but are worth noting:
 
-- **No automated tests exist.** The CI workflow has a test job placeholder, but the project has no test suite. This is an accurate reflection of the repo's state — no fake test docs were created.
+- **No comprehensive test suite exists.** Only lightweight contract checks are present (`test_deployment_contracts.py`, wired into the CI `test` job). No unit or integration tests cover the bot or ML handler logic.
 - **No formal release/versioning process.** The project does not use tags or semantic versioning. This is fine for its current maturity.
 - **`.vscode/settings.json` is tracked.** Contains only `python.defaultInterpreterPath`. Harmless but unnecessary for public consumption.
 
