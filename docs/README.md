@@ -12,6 +12,7 @@ Navigate the Callsum documentation by topic.
 | [HANDOFF_CHECKLIST.md](HANDOFF_CHECKLIST.md) | Step-by-step deployment & verification checklist |
 | [PROJECT_STATUS.md](PROJECT_STATUS.md) | Current state: what works and what needs staging |
 | [PUBLISH_READINESS_REPORT.md](PUBLISH_READINESS_REPORT.md) | Public-repo modernization and publish-safe status |
+| [PUBLIC_REPO_VERIFICATION.md](PUBLIC_REPO_VERIFICATION.md) | Final pass/fail checklist for public release |
 
 ## 🏗️ Technical Reference
 
