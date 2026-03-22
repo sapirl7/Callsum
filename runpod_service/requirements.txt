@@ -1,6 +1,6 @@
 # ML Models
 torch==2.3.1
-faster-whisper==0.10.0
+faster-whisper==1.2.1
 pyannote.audio==3.1.1
 vllm==0.6.3
 transformers==4.45.0
