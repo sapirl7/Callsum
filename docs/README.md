@@ -1,48 +1,33 @@
-# Documentation Map
+<![CDATA[# 📖 Documentation Index
 
-Ниже каноническая структура документации проекта.
+Navigate the Callsum documentation by topic.
 
-## Начать отсюда
+---
 
-- `README.md`
-Общий обзор проекта, архитектуры и ссылок на актуальные документы.
+## 🚀 Start Here
 
-- `docs/HANDOFF_CHECKLIST.md`
-Финальный чеклист передачи заказчику.
+| Document | What You'll Learn |
+|----------|-------------------|
+| [README.md](../README.md) | Project overview, quick start, cost breakdown |
+| [HANDOFF_CHECKLIST.md](HANDOFF_CHECKLIST.md) | Step-by-step deployment & verification checklist |
+| [PROJECT_STATUS.md](PROJECT_STATUS.md) | Current state: what works and what needs staging |
 
-- `docs/PROJECT_STATUS.md`
-Текущий статус проекта, что уже проверено и что ещё требует внешней проверки.
+## 🏗️ Technical Reference
 
-## Техническая документация
+| Document | What You'll Learn |
+|----------|-------------------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System design, Mermaid diagrams, security model, ML pipeline |
+| [CONFIGURATION.md](CONFIGURATION.md) | All environment variables with defaults and descriptions |
+| [API.md](API.md) | Webhook/callback contracts, result JSON schema, status flow |
+| [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Detailed deployment walkthrough |
 
-- `docs/DEPLOYMENT_GUIDE.md`
-Основной подробный сценарий деплоя.
+## 📎 Optional / Legacy
 
-- `docs/ARCHITECTURE.md`
-Краткая архитектурная схема и data flow.
-
-- `docs/API.md`
-Webhook и callback contract.
-
-- `docs/CONFIGURATION.md`
-Переменные окружения и основные runtime настройки.
-
-- `docs/DIGITALOCEAN_SPACES_GUIDE.md`
-Опциональный сценарий для DO Spaces вместо AWS S3.
-
-## Вспомогательные root-level файлы
-
-- `QUICK_START.md`
-Короткий quick-start для первого прохода.
-
-- `DEPLOYMENT_GUIDE_FULL.md`
-Расширенный long-form deployment guide.
-
-- `DEPLOYMENT_README.md`
-Обзорный deployment summary.
-
-- `README_DEPLOYMENT.md`
-Исторический summary-файл по деплою и обновлениям.
-
-- `presentation.html`
-Презентационный/демо-артефакт, не источник истины для эксплуатации.
+| Document | Notes |
+|----------|-------|
+| [DIGITALOCEAN_SPACES_GUIDE.md](DIGITALOCEAN_SPACES_GUIDE.md) | Alternative storage backend instead of AWS S3 |
+| [../QUICK_START.md](../QUICK_START.md) | Legacy quick-start (superseded by README.md) |
+| [../DEPLOYMENT_README.md](../DEPLOYMENT_README.md) | Legacy deployment summary |
+| [../DEPLOYMENT_GUIDE_FULL.md](../DEPLOYMENT_GUIDE_FULL.md) | Legacy extended deployment guide |
+| [../README_DEPLOYMENT.md](../README_DEPLOYMENT.md) | Legacy deployment changelog |
+]]>
