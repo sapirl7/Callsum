@@ -1,33 +1,33 @@
-# Terraform Variables Example
-# Скопируйте этот файл в terraform.tfvars и заполните значения
+<![CDATA[# Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in the values
 
-# === ОБЯЗАТЕЛЬНЫЕ ПАРАМЕТРЫ ===
+# === REQUIRED PARAMETERS ===
 
-# Telegram Bot Token (получите у @BotFather)
+# Telegram Bot Token (get from @BotFather)
 telegram_bot_token = "YOUR_TELEGRAM_BOT_TOKEN"
 
-# Telegram Secret Token (для защиты webhook)
-# Сгенерируйте случайную строку (например: openssl rand -hex 32)
-# Укажите этот же токен при установке webhook через Telegram API
+# Telegram Secret Token (for webhook protection)
+# Generate a random string (e.g.: openssl rand -hex 32)
+# Use the same token when setting the webhook via Telegram API
 telegram_secret_token = "YOUR_RANDOM_SECRET_TOKEN"
 
-# RunPod Callback Token (опционально)
-# Если оставить пустым, будет использован telegram_secret_token
+# RunPod Callback Token (optional)
+# If left empty, telegram_secret_token will be used
 runpod_callback_token = "YOUR_RUNPOD_CALLBACK_TOKEN"
 
-# Hugging Face Token (для Pyannote модели)
-# Получите на https://huggingface.co/settings/tokens
+# Hugging Face Token (for Pyannote model)
+# Get at https://huggingface.co/settings/tokens
 hf_token = "YOUR_HF_TOKEN"
 
 # RunPod API Key
-# Получите на https://www.runpod.io/console/user/settings
+# Get at https://www.runpod.io/console/user/settings
 runpod_api_key = "YOUR_RUNPOD_API_KEY"
 
-# RunPod Endpoint URL (создается после деплоя RunPod сервиса)
-# Формат: https://api.runpod.ai/v2/{endpoint_id}
+# RunPod Endpoint URL (created after deploying the RunPod service)
+# Format: https://api.runpod.ai/v2/{endpoint_id}
 runpod_endpoint_url = "https://api.runpod.ai/v2/YOUR_ENDPOINT_ID"
 
-# === ОПЦИОНАЛЬНЫЕ ПАРАМЕТРЫ ===
+# === OPTIONAL PARAMETERS ===
 
 # AWS Region
 aws_region = "us-east-1"
@@ -35,52 +35,53 @@ aws_region = "us-east-1"
 # Environment (dev, staging, prod)
 environment = "prod"
 
-# S3 Bucket Name (должно быть уникальным глобально)
+# S3 Bucket Name (must be globally unique)
 s3_bucket_name = "callsum-prod-your-unique-suffix"
 
-# Email для алертов (оставьте пустым если не нужны email уведомления)
+# Alert email (leave empty if email notifications are not needed)
 alert_email = "your@email.com"
 
-# Бюджетные лимиты (USD)
-monthly_budget_limit = 25  # Общий месячный лимит
-runpod_monthly_limit = 15  # Лимит для RunPod
+# Budget limits (USD)
+monthly_budget_limit = 25  # Total monthly limit
+runpod_monthly_limit = 15  # RunPod limit
 
-# Включить детальное отслеживание расходов
+# Enable detailed cost tracking
 enable_cost_tracking = true
 
-# Lambda конфигурация
-lambda_timeout = 60      # секунд
+# Lambda configuration
+lambda_timeout = 60      # seconds
 lambda_memory  = 512     # MB
 
-# DynamoDB таблица для jobs
+# DynamoDB table for jobs
 dynamodb_table_name = "callsum-jobs"
 
-# === DIGITALOCEAN SPACES (ОПЦИОНАЛЬНО) ===
-# Используйте если хотите хранить файлы в DigitalOcean Spaces вместо AWS S3
-# Стоимость: ~$5/месяц за 250GB (дешевле чем AWS S3)
+# === DIGITALOCEAN SPACES (OPTIONAL) ===
+# Use if you want to store files in DigitalOcean Spaces instead of AWS S3
+# Cost: ~$5/month for 250 GB (cheaper than AWS S3)
 
-# Включить DigitalOcean Spaces вместо AWS S3
-use_digitalocean_spaces = false  # Установите true для использования DO Spaces
+# Enable DigitalOcean Spaces instead of AWS S3
+use_digitalocean_spaces = false  # Set to true to use DO Spaces
 
 # DigitalOcean Spaces Endpoint
-# Формат: https://<region>.digitaloceanspaces.com
-# Регионы: nyc3, sfo3, sgp1, fra1, ams3
+# Format: https://<region>.digitaloceanspaces.com
+# Regions: nyc3, sfo3, sgp1, fra1, ams3
 s3_endpoint = "https://fra1.digitaloceanspaces.com"
 
 # DigitalOcean Spaces Keys
-# Получите в панели: DigitalOcean -> API -> Spaces Keys
+# Get from: DigitalOcean -> API -> Spaces Keys
 s3_access_key = "YOUR_DO_SPACES_ACCESS_KEY"
 s3_secret_key = "YOUR_DO_SPACES_SECRET_KEY"
 
-# ВАЖНО: При использовании DO Spaces создайте Space вручную с именем из s3_bucket_name
-# Например: callsum-prod-your-unique-suffix
+# IMPORTANT: When using DO Spaces, create the Space manually with the name from s3_bucket_name
+# For example: callsum-prod-your-unique-suffix
 
-# === ИНСТРУКЦИЯ ПО НАСТРОЙКЕ DIGITALOCEAN SPACES ===
-# 1. Создайте аккаунт на digitalocean.com
-# 2. Перейдите: Manage -> Spaces -> Create Space
-# 3. Выберите регион (например: Frankfurt - fra1)
-# 4. Имя Space: такое же как s3_bucket_name выше
-# 5. Перейдите: API -> Spaces Keys -> Generate New Key
-# 6. Скопируйте Access Key и Secret Key в переменные выше
-# 7. Установите use_digitalocean_spaces = true
-# 8. Запустите terraform apply
+# === DIGITALOCEAN SPACES SETUP INSTRUCTIONS ===
+# 1. Create an account at digitalocean.com
+# 2. Navigate to: Manage -> Spaces -> Create Space
+# 3. Choose a region (e.g.: Frankfurt - fra1)
+# 4. Space name: same as s3_bucket_name above
+# 5. Navigate to: API -> Spaces Keys -> Generate New Key
+# 6. Copy Access Key and Secret Key into the variables above
+# 7. Set use_digitalocean_spaces = true
+# 8. Run terraform apply
+]]>

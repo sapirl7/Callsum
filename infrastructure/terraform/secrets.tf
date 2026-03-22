@@ -1,11 +1,11 @@
-# AWS Secrets Manager для хранения токенов
+<![CDATA[# AWS Secrets Manager for storing tokens
 
 # Telegram Bot Token
 resource "aws_secretsmanager_secret" "telegram_bot_token" {
   name        = "${local.project_name}/telegram-bot-token-${var.environment}"
   description = "Telegram Bot Token"
 
-  recovery_window_in_days = 7  # Можно восстановить в течение 7 дней после удаления
+  recovery_window_in_days = 7  # Can be recovered within 7 days after deletion
 
   tags = merge(local.common_tags, {
     Name = "Telegram Bot Token"
@@ -22,7 +22,7 @@ resource "aws_secretsmanager_secret_version" "telegram_bot_token" {
 # Hugging Face Token
 resource "aws_secretsmanager_secret" "hf_token" {
   name        = "${local.project_name}/hf-token-${var.environment}"
-  description = "Hugging Face Token для Pyannote"
+  description = "Hugging Face Token for Pyannote"
 
   recovery_window_in_days = 7
 
@@ -59,21 +59,21 @@ resource "aws_secretsmanager_secret_version" "runpod_api_key" {
 
 # Outputs
 output "telegram_bot_token_arn" {
-  description = "ARN секрета с Telegram Bot Token"
+  description = "ARN of the Telegram Bot Token secret"
   value       = aws_secretsmanager_secret.telegram_bot_token.arn
 }
 
 output "hf_token_arn" {
-  description = "ARN секрета с HF Token"
+  description = "ARN of the HF Token secret"
   value       = aws_secretsmanager_secret.hf_token.arn
 }
 
 output "runpod_api_key_arn" {
-  description = "ARN секрета с RunPod API Key"
+  description = "ARN of the RunPod API Key secret"
   value       = aws_secretsmanager_secret.runpod_api_key.arn
 }
 
-# DigitalOcean Spaces Credentials (опционально)
+# DigitalOcean Spaces Credentials (optional)
 resource "aws_secretsmanager_secret" "do_spaces_keys" {
   count       = var.use_digitalocean_spaces ? 1 : 0
   name        = "${local.project_name}/do-spaces-keys-${var.environment}"
@@ -96,6 +96,7 @@ resource "aws_secretsmanager_secret_version" "do_spaces_keys" {
 }
 
 output "do_spaces_keys_arn" {
-  description = "ARN секрета с DO Spaces ключами"
+  description = "ARN of the DO Spaces keys secret"
   value       = var.use_digitalocean_spaces ? aws_secretsmanager_secret.do_spaces_keys[0].arn : ""
 }
+]]>

@@ -1,13 +1,13 @@
-# Lambda функция для Telegram бота
+<![CDATA[# Lambda function for Telegram bot
 
-# Архив с кодом Lambda (предполагается что код уже собран)
+# Lambda code archive (assumes code has been built)
 data "archive_file" "telegram_bot_lambda" {
   type        = "zip"
   source_dir  = "${path.module}/../../telegram_bot/build/lambda"
   output_path = "${path.module}/telegram_bot_lambda.zip"
 }
 
-# Lambda функция
+# Lambda function
 resource "aws_lambda_function" "telegram_bot" {
   filename      = data.archive_file.telegram_bot_lambda.output_path
   function_name = "${local.project_name}-telegram-bot-${var.environment}"
@@ -37,7 +37,7 @@ resource "aws_lambda_function" "telegram_bot" {
       TELEGRAM_BOT_TOKEN_SECRET_ARN = aws_secretsmanager_secret.telegram_bot_token.arn
       RUNPOD_API_KEY_SECRET_ARN     = aws_secretsmanager_secret.runpod_api_key.arn
 
-      # Security: Secret token для защиты webhook от подделки
+      # Security: Secret token to protect webhook from forged requests
       TELEGRAM_SECRET_TOKEN = var.telegram_secret_token
       RUNPOD_CALLBACK_TOKEN = var.runpod_callback_token != "" ? var.runpod_callback_token : var.telegram_secret_token
 
@@ -62,7 +62,7 @@ resource "aws_lambda_function" "telegram_bot" {
     }, {})
   }
 
-  # Для продакшена можно добавить VPC config
+  # For production, consider adding VPC config
   # vpc_config {
   #   subnet_ids         = var.subnet_ids
   #   security_group_ids = var.security_group_ids
@@ -76,14 +76,14 @@ resource "aws_lambda_function" "telegram_bot" {
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "telegram_bot" {
   name              = "/aws/lambda/${aws_lambda_function.telegram_bot.function_name}"
-  retention_in_days = 7  # Храним логи 7 дней
+  retention_in_days = 7  # Retain logs for 7 days
 
   tags = merge(local.common_tags, {
     Name = "Telegram Bot Logs"
   })
 }
 
-# Lambda Permission для API Gateway
+# Lambda Permission for API Gateway
 resource "aws_lambda_permission" "api_gateway" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
@@ -92,7 +92,7 @@ resource "aws_lambda_permission" "api_gateway" {
   source_arn    = "${aws_api_gateway_rest_api.telegram_webhook.execution_arn}/*/*"
 }
 
-# CloudWatch Alarms для мониторинга
+# CloudWatch Alarms for monitoring
 resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
   alarm_name          = "${local.project_name}-lambda-errors-${var.environment}"
   comparison_operator = "GreaterThanThreshold"
@@ -109,7 +109,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
     FunctionName = aws_lambda_function.telegram_bot.function_name
   }
 
-  # Отправляем алерты в SNS
+  # Send alerts to SNS
   alarm_actions = [aws_sns_topic.alerts.arn]
 }
 
@@ -121,7 +121,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   namespace           = "AWS/Lambda"
   period              = 300
   statistic           = "Average"
-  threshold           = 50000  # 50 секунд
+  threshold           = 50000  # 50 seconds
   alarm_description   = "Alert on high Lambda duration"
   treat_missing_data  = "notBreaching"
 
@@ -129,17 +129,18 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
     FunctionName = aws_lambda_function.telegram_bot.function_name
   }
 
-  # Отправляем алерты в SNS
+  # Send alerts to SNS
   alarm_actions = [aws_sns_topic.alerts.arn]
 }
 
 # Outputs
 output "lambda_function_arn" {
-  description = "ARN Lambda функции"
+  description = "ARN of the Lambda function"
   value       = aws_lambda_function.telegram_bot.arn
 }
 
 output "lambda_function_name" {
-  description = "Имя Lambda функции"
+  description = "Name of the Lambda function"
   value       = aws_lambda_function.telegram_bot.function_name
 }
+]]>

@@ -1,8 +1,8 @@
-# API Gateway для Telegram Webhook
+<![CDATA[# API Gateway for Telegram Webhook
 
 resource "aws_api_gateway_rest_api" "telegram_webhook" {
   name        = "${local.project_name}-telegram-webhook-${var.environment}"
-  description = "API Gateway для Telegram Bot Webhook"
+  description = "API Gateway for Telegram Bot Webhook"
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -64,7 +64,7 @@ resource "aws_api_gateway_method" "webhook_post" {
   rest_api_id   = aws_api_gateway_rest_api.telegram_webhook.id
   resource_id   = aws_api_gateway_resource.webhook.id
   http_method   = "POST"
-  authorization = "NONE"  # Telegram не поддерживает auth headers
+  authorization = "NONE"  # Telegram does not support auth headers
 }
 
 # GET method for health check
@@ -75,7 +75,7 @@ resource "aws_api_gateway_method" "health_get" {
   authorization = "NONE"
 }
 
-# Health check mock integration (без Lambda)
+# Health check mock integration (no Lambda needed)
 resource "aws_api_gateway_integration" "health_mock" {
   rest_api_id = aws_api_gateway_rest_api.telegram_webhook.id
   resource_id = aws_api_gateway_resource.health.id
@@ -165,7 +165,7 @@ resource "aws_api_gateway_stage" "webhook" {
   rest_api_id   = aws_api_gateway_rest_api.telegram_webhook.id
   stage_name    = var.environment
 
-  # Логирование
+  # Access logging
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway.arn
     format = jsonencode({
@@ -201,13 +201,13 @@ resource "aws_api_gateway_method_settings" "webhook" {
     logging_level      = "INFO"
     data_trace_enabled = false
 
-    # Throttling (защита от DDoS)
+    # Throttling (DDoS protection)
     throttling_burst_limit = 100
     throttling_rate_limit  = 50
   }
 }
 
-# CloudWatch Log Group для API Gateway
+# CloudWatch Log Group for API Gateway
 resource "aws_cloudwatch_log_group" "api_gateway" {
   name              = "/aws/apigateway/${aws_api_gateway_rest_api.telegram_webhook.name}"
   retention_in_days = 7
@@ -219,16 +219,17 @@ resource "aws_cloudwatch_log_group" "api_gateway" {
 
 # Outputs
 output "api_gateway_url" {
-  description = "URL для Telegram Webhook"
+  description = "Telegram Webhook URL"
   value       = "${aws_api_gateway_stage.webhook.invoke_url}/webhook"
 }
 
 output "health_check_url" {
-  description = "URL для Health Check (для мониторинга)"
+  description = "Health Check URL (for monitoring)"
   value       = "${aws_api_gateway_stage.webhook.invoke_url}/health"
 }
 
 output "api_gateway_id" {
-  description = "ID API Gateway"
+  description = "API Gateway ID"
   value       = aws_api_gateway_rest_api.telegram_webhook.id
 }
+]]>

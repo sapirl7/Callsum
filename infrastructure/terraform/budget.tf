@@ -1,4 +1,4 @@
-# AWS Budget для контроля расходов
+<![CDATA[# AWS Budget for cost control
 
 resource "aws_budgets_budget" "monthly_cost" {
   name              = "${local.project_name}-monthly-budget-${var.environment}"
@@ -49,7 +49,7 @@ resource "aws_budgets_budget" "monthly_cost" {
   })
 }
 
-# Budget для RunPod costs (отслеживание через tags)
+# Budget for RunPod costs (tracked via tags)
 resource "aws_budgets_budget" "runpod_cost" {
   count = var.enable_cost_tracking ? 1 : 0
 
@@ -82,6 +82,7 @@ resource "aws_budgets_budget" "runpod_cost" {
 }
 
 output "budget_name" {
-  description = "Имя созданного бюджета"
+  description = "Name of the created budget"
   value       = aws_budgets_budget.monthly_cost.name
 }
+]]>

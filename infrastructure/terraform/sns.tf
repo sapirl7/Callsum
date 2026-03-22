@@ -1,4 +1,4 @@
-# SNS Topic для CloudWatch алармов и уведомлений
+<![CDATA[# SNS Topic for CloudWatch alarms and notifications
 
 resource "aws_sns_topic" "alerts" {
   name         = "${local.project_name}-alerts-${var.environment}"
@@ -9,7 +9,7 @@ resource "aws_sns_topic" "alerts" {
   })
 }
 
-# Email subscription (нужно будет подтвердить вручную после деплоя)
+# Email subscription (must be confirmed manually after deployment)
 resource "aws_sns_topic_subscription" "email_alerts" {
   count     = var.alert_email != "" ? 1 : 0
   topic_arn = aws_sns_topic.alerts.arn
@@ -17,7 +17,7 @@ resource "aws_sns_topic_subscription" "email_alerts" {
   endpoint  = var.alert_email
 }
 
-# IAM Policy для CloudWatch на публикацию в SNS
+# IAM Policy for CloudWatch to publish to SNS
 resource "aws_sns_topic_policy" "alerts" {
   arn = aws_sns_topic.alerts.arn
 
@@ -40,6 +40,7 @@ resource "aws_sns_topic_policy" "alerts" {
 
 # Outputs
 output "sns_topic_arn" {
-  description = "ARN SNS топика для алармов"
+  description = "ARN of the alerts SNS topic"
   value       = aws_sns_topic.alerts.arn
 }
+]]>

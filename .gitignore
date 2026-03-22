@@ -1,34 +1,52 @@
-# Игнорировать локальный файл с секретами
+<![CDATA[# Ignore local secrets
 .env
+.env.*
 
-# Виртуальные окружения
+# Virtual environments
 venv/
 callsum_env/
 env/
+.venv/
 
-# Системные файлы macOS и Python
+# macOS and Python system files
 .DS_Store
 .pycache/
 __pycache__/
 *.pyc
+*.pyo
 
-# Базы данных и результаты работы
+# Databases and processing outputs
 *.db
-
-# Игнорируем только результаты обработки, НЕ конфиги
 structured_summary.json
+
+# Terraform state (sensitive)
 terraform.tfstate
 terraform.tfstate.backup
 .terraform.tfstate.lock.info
-
-# Игнорируем логи, НЕ requirements
-*.log
-outputs.json
-
-# Terraform
 .terraform/
 *.tfvars
 !*.tfvars.example
 
+# Logs
+*.log
+outputs.json
+
 # Build artifacts
 telegram_bot/build/
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Coverage
+htmlcov/
+.coverage
+coverage.xml
+
+# Distribution
+dist/
+*.egg-info/
+]]>

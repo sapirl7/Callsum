@@ -1,0 +1,34 @@
+<![CDATA[# Documentation
+docs/
+*.md
+
+# Tests
+test_*.py
+
+# Infrastructure
+infrastructure/
+deployment/
+
+# Git
+.git/
+.github/
+.gitignore
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# Environment
+.env
+.env.*
+*.tfvars
+
+# OS files
+.DS_Store
+__pycache__/
+
+# Build artifacts
+telegram_bot/
+presentation.html
+]]>

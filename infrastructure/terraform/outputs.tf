@@ -1,7 +1,7 @@
-# Terraform Outputs - итоговая информация после деплоя
+<![CDATA[# Terraform Outputs - deployment summary
 
 output "summary" {
-  description = "Итоговая информация о развернутой инфраструктуре"
+  description = "Deployed infrastructure summary"
   value = {
     # API & Webhook
     webhook_url = "${aws_api_gateway_stage.webhook.invoke_url}/webhook"
@@ -29,35 +29,36 @@ output "summary" {
 }
 
 output "next_steps" {
-  description = "Следующие шаги после деплоя"
+  description = "Next steps after deployment"
   value = <<-EOT
 
-    ✅ ИНФРАСТРУКТУРА РАЗВЕРНУТА!
+    INFRASTRUCTURE DEPLOYED!
 
-    📝 СЛЕДУЮЩИЕ ШАГИ:
+    NEXT STEPS:
 
-    1. Установите Telegram Webhook:
+    1. Set Telegram Webhook:
        curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
          -H "Content-Type: application/json" \
          -d '{"url": "${aws_api_gateway_stage.webhook.invoke_url}/webhook"}'
 
-    2. Проверьте webhook:
+    2. Verify webhook:
        curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
 
-     3. Деплой Docker контейнера на RunPod:
+     3. Deploy Docker container to RunPod:
        cd deployment
        ./deploy_runpod.sh
 
-    4. Протестируйте бота:
-       Отправьте /start боту в Telegram
+    4. Test the bot:
+       Send /start to the bot in Telegram
 
-    5. Мониторинг:
+    5. Monitoring:
        - CloudWatch Logs: https://console.aws.amazon.com/cloudwatch/
        - DynamoDB: ${aws_dynamodb_table.callsum_jobs.name}
 
-    📊 DASHBOARD:
+    DASHBOARD:
      S3 Bucket: ${var.use_digitalocean_spaces ? var.s3_bucket_name : aws_s3_bucket.callsum_storage[0].id}
      Lambda: ${aws_lambda_function.telegram_bot.function_name}
 
   EOT
 }
+]]>

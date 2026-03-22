@@ -1,4 +1,4 @@
-# DynamoDB таблица для Rate Limiting
+<![CDATA[# DynamoDB table for Rate Limiting
 
 resource "aws_dynamodb_table" "rate_limits" {
   name         = "${var.dynamodb_table_name}-rate-limits"
@@ -13,16 +13,16 @@ resource "aws_dynamodb_table" "rate_limits" {
 
   attribute {
     name = "window_start"
-    type = "N" # Unix timestamp начала временного окна
+    type = "N" # Unix timestamp of window start
   }
 
-  # TTL для автоудаления старых записей (записи старше 24 часов)
+  # TTL for automatic cleanup of old records (older than 24 hours)
   ttl {
     enabled        = true
     attribute_name = "ttl"
   }
 
-  # Шифрование
+  # Encryption
   server_side_encryption {
     enabled = true
   }
@@ -34,6 +34,7 @@ resource "aws_dynamodb_table" "rate_limits" {
 
 # Outputs
 output "rate_limits_table_name" {
-  description = "Имя таблицы Rate Limiting"
+  description = "Rate Limiting table name"
   value       = aws_dynamodb_table.rate_limits.name
 }
+]]>

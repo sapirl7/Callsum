@@ -1,60 +1,60 @@
-#!/bin/bash
-# Скрипт деплоя AWS инфраструктуры через Terraform
+<![CDATA[#!/bin/bash
+# AWS infrastructure deployment script via Terraform
 
-set -e  # Останавливаемся при ошибках
+set -e  # Stop on errors
 
-echo "🚀 ДЕПЛОЙ CALLSUM НА AWS"
+echo "🚀 DEPLOYING CALLSUM TO AWS"
 echo "========================"
 echo ""
 
-# Цвета для вывода
+# Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Проверка необходимых инструментов
-echo "📋 Проверка зависимостей..."
+# Check required tools
+echo "📋 Checking dependencies..."
 
 if ! command -v terraform &> /dev/null; then
-    echo -e "${RED}❌ Terraform не установлен${NC}"
-    echo "Установите: https://www.terraform.io/downloads"
+    echo -e "${RED}❌ Terraform is not installed${NC}"
+    echo "Install: https://www.terraform.io/downloads"
     exit 1
 fi
 
 if ! command -v aws &> /dev/null; then
-    echo -e "${RED}❌ AWS CLI не установлен${NC}"
-    echo "Установите: https://aws.amazon.com/cli/"
+    echo -e "${RED}❌ AWS CLI is not installed${NC}"
+    echo "Install: https://aws.amazon.com/cli/"
     exit 1
 fi
 
-echo -e "${GREEN}✅ Все зависимости установлены${NC}"
+echo -e "${GREEN}✅ All dependencies installed${NC}"
 echo ""
 
-# Сборка Lambda пакета с зависимостями
-echo "📦 Сборка Lambda пакета..."
+# Build Lambda package with dependencies
+echo "📦 Building Lambda package..."
 "$(dirname "$0")/build_lambda_package.sh"
 echo ""
 
-# Переходим в директорию Terraform
+# Navigate to Terraform directory
 cd "$(dirname "$0")/../infrastructure/terraform"
 
-# Проверка наличия terraform.tfvars
+# Check if terraform.tfvars exists
 if [ ! -f "terraform.tfvars" ]; then
-    echo -e "${YELLOW}⚠️  Файл terraform.tfvars не найден${NC}"
-    echo "Создайте его на основе terraform.tfvars.example:"
+    echo -e "${YELLOW}⚠️  terraform.tfvars not found${NC}"
+    echo "Create it from the example:"
     echo ""
     echo "  cp terraform.tfvars.example terraform.tfvars"
-    echo "  nano terraform.tfvars  # И заполните своими значениями"
+    echo "  nano terraform.tfvars  # Fill in your values"
     echo ""
     exit 1
 fi
 
-# Проверка AWS credentials
-echo "🔐 Проверка AWS credentials..."
+# Check AWS credentials
+echo "🔐 Checking AWS credentials..."
 if ! aws sts get-caller-identity &> /dev/null; then
-    echo -e "${RED}❌ AWS credentials не настроены${NC}"
-    echo "Настройте: aws configure"
+    echo -e "${RED}❌ AWS credentials not configured${NC}"
+    echo "Run: aws configure"
     exit 1
 fi
 
@@ -76,16 +76,16 @@ terraform validate
 echo "📊 Terraform plan..."
 terraform plan -out=tfplan
 
-# Подтверждение
+# Confirmation
 echo ""
-echo -e "${YELLOW}⚠️  ВНИМАНИЕ: Сейчас будет создана инфраструктура на AWS${NC}"
+echo -e "${YELLOW}⚠️  WARNING: AWS infrastructure will be created${NC}"
 echo ""
-echo "Стоимость: ~\$1-3/месяц (S3 + Lambda + DynamoDB)"
+echo "Cost: ~\$1-3/month (S3 + Lambda + DynamoDB)"
 echo ""
-read -p "Продолжить? (yes/no): " confirm
+read -p "Continue? (yes/no): " confirm
 
 if [ "$confirm" != "yes" ]; then
-    echo "Отменено пользователем"
+    echo "Cancelled by user"
     exit 0
 fi
 
@@ -94,44 +94,45 @@ echo ""
 echo "🚀 Terraform apply..."
 terraform apply tfplan
 
-# Сохраняем outputs
+# Save outputs
 echo ""
-echo "💾 Сохранение outputs..."
+echo "💾 Saving outputs..."
 terraform output -json > outputs.json
 
-# Получаем webhook URL
+# Get webhook URL
 WEBHOOK_URL=$(terraform output -raw api_gateway_url)
 
 echo ""
-echo -e "${GREEN}✅ ДЕПЛОЙ ЗАВЕРШЕН!${NC}"
+echo -e "${GREEN}✅ DEPLOYMENT COMPLETE!${NC}"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📝 СЛЕДУЮЩИЕ ШАГИ:"
+echo "📝 NEXT STEPS:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "1. Установите Telegram Webhook:"
+echo "1. Set Telegram Webhook:"
 echo ""
 echo "   curl -X POST \"https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook\" \\"
 echo "     -H \"Content-Type: application/json\" \\"
 echo "     -d '{\"url\": \"${WEBHOOK_URL}\"}'"
 echo ""
-echo "2. Проверьте webhook:"
+echo "2. Verify webhook:"
 echo ""
 echo "   curl \"https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo\""
 echo ""
-echo "3. Деплой на RunPod:"
+echo "3. Deploy to RunPod:"
 echo ""
 echo "   cd runpod_service"
 echo "   ./deploy_runpod.sh"
 echo ""
-echo "4. Тестируйте бота в Telegram!"
+echo "4. Test the bot in Telegram!"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Показываем полную сводку
-echo "📊 СВОДКА:"
+# Show full summary
+echo "📊 SUMMARY:"
 terraform output summary
 
 echo ""
-echo -e "${GREEN}🎉 Готово!${NC}"
+echo -e "${GREEN}🎉 Done!${NC}"
+]]>

@@ -1,5 +1,5 @@
-#!/bin/bash
-# Сборка артефакта Lambda с vendored Python зависимостями.
+<![CDATA[#!/bin/bash
+# Build Lambda artifact with vendored Python dependencies.
 
 set -euo pipefail
 
@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SOURCE_DIR="$ROOT_DIR/telegram_bot"
 BUILD_DIR="$SOURCE_DIR/build/lambda"
 
-echo "📦 Сборка Lambda package..."
+echo "📦 Building Lambda package..."
 
 /bin/rm -rf "$BUILD_DIR"
 /bin/mkdir -p "$BUILD_DIR"
@@ -19,4 +19,5 @@ python3 -m pip install \
 
 /bin/cp "$SOURCE_DIR/bot.py" "$BUILD_DIR/bot.py"
 
-echo "✅ Lambda package готов: $BUILD_DIR"
+echo "✅ Lambda package ready: $BUILD_DIR"
+]]>

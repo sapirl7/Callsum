@@ -9,7 +9,7 @@ terraform {
     }
   }
 
-  # Backend для хранения state (раскомментируйте после создания bucket)
+  # Backend for state storage (uncomment after creating the bucket)
   # backend "s3" {
   #   bucket         = "callsum-terraform-state"
   #   key            = "prod/terraform.tfstate"
@@ -31,7 +31,7 @@ provider "aws" {
   }
 }
 
-# Локальные переменные
+# Local variables
 locals {
   project_name = "callsum"
   common_tags = {

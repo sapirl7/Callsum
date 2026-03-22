@@ -1,38 +1,38 @@
-# Terraform Variables
+<![CDATA[# Terraform Variables
 
 variable "aws_region" {
-  description = "AWS регион для деплоя"
+  description = "AWS region for deployment"
   type        = string
   default     = "us-east-1"
 }
 
 variable "environment" {
-  description = "Окружение (dev, staging, prod)"
+  description = "Environment (dev, staging, prod)"
   type        = string
   default     = "prod"
 }
 
 variable "telegram_bot_token" {
-  description = "Telegram Bot Token (будет храниться в Secrets Manager)"
+  description = "Telegram Bot Token (stored in Secrets Manager)"
   type        = string
   sensitive   = true
 }
 
 variable "telegram_secret_token" {
-  description = "Secret token для защиты Telegram webhook от поддельных запросов"
+  description = "Secret token to protect Telegram webhook from forged requests"
   type        = string
   sensitive   = true
 }
 
 variable "runpod_callback_token" {
-  description = "Отдельный token для аутентификации callback запросов от RunPod. Если пусто, используется telegram_secret_token."
+  description = "Separate token for authenticating callback requests from RunPod. If empty, telegram_secret_token is used."
   type        = string
   sensitive   = true
   default     = ""
 }
 
 variable "hf_token" {
-  description = "Hugging Face Token для Pyannote"
+  description = "Hugging Face Token for Pyannote"
   type        = string
   sensitive   = true
 }
@@ -49,77 +49,77 @@ variable "runpod_endpoint_url" {
 }
 
 variable "s3_bucket_name" {
-  description = "Имя S3 bucket для хранения аудио"
+  description = "S3 bucket name for audio storage"
   type        = string
   default     = "callsum-prod"
 }
 
 variable "dynamodb_table_name" {
-  description = "Имя DynamoDB таблицы для jobs"
+  description = "DynamoDB table name for jobs"
   type        = string
   default     = "callsum-jobs"
 }
 
 variable "lambda_timeout" {
-  description = "Timeout для Lambda функций (секунды)"
+  description = "Lambda function timeout (seconds)"
   type        = number
   default     = 60
 }
 
 variable "lambda_memory" {
-  description = "Memory для Lambda функций (MB)"
+  description = "Lambda function memory (MB)"
   type        = number
   default     = 512
 }
 
 variable "alert_email" {
-  description = "Email для получения алертов (опционально)"
+  description = "Email for receiving alerts (optional)"
   type        = string
   default     = ""
 }
 
 variable "monthly_budget_limit" {
-  description = "Месячный лимит расходов в USD"
+  description = "Monthly spending limit in USD"
   type        = number
   default     = 25
 }
 
 variable "runpod_monthly_limit" {
-  description = "Месячный лимит для RunPod в USD"
+  description = "Monthly RunPod limit in USD"
   type        = number
   default     = 15
 }
 
 variable "enable_cost_tracking" {
-  description = "Включить детальное отслеживание расходов"
+  description = "Enable detailed cost tracking"
   type        = bool
   default     = true
 }
 
-# === DigitalOcean Spaces Configuration (опционально) ===
-# Используйте если хотите хранить файлы в DO Spaces вместо AWS S3
+# === DigitalOcean Spaces Configuration (optional) ===
+# Use if you want to store files in DO Spaces instead of AWS S3
 
 variable "use_digitalocean_spaces" {
-  description = "Использовать DigitalOcean Spaces вместо AWS S3"
+  description = "Use DigitalOcean Spaces instead of AWS S3"
   type        = bool
   default     = false
 }
 
 variable "s3_endpoint" {
-  description = "S3-совместимый endpoint (для DigitalOcean Spaces: https://<region>.digitaloceanspaces.com)"
+  description = "S3-compatible endpoint (for DigitalOcean Spaces: https://<region>.digitaloceanspaces.com)"
   type        = string
   default     = ""
 }
 
 variable "s3_access_key" {
-  description = "Access Key для S3-совместимого хранилища (DigitalOcean Spaces Key)"
+  description = "Access Key for S3-compatible storage (DigitalOcean Spaces Key)"
   type        = string
   sensitive   = true
   default     = ""
 }
 
 variable "s3_secret_key" {
-  description = "Secret Key для S3-совместимого хранилища (DigitalOcean Spaces Secret)"
+  description = "Secret Key for S3-compatible storage (DigitalOcean Spaces Secret)"
   type        = string
   sensitive   = true
   default     = ""
@@ -128,13 +128,14 @@ variable "s3_secret_key" {
 # === AI Models Configuration ===
 
 variable "llm_language" {
-  description = "Язык для транскрипции Whisper (например, 'ru', 'en')"
+  description = "Language for Whisper transcription (e.g., 'ru', 'en')"
   type        = string
   default     = "ru"
 }
 
 variable "custom_system_prompt" {
-  description = "Пользовательский системный промпт для саммаризации (оставьте пустым для дефолтного)"
+  description = "Custom system prompt for summarization (leave empty for default)"
   type        = string
   default     = ""
 }
+]]>

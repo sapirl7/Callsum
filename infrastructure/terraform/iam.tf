@@ -1,6 +1,6 @@
-# IAM Roles и Policies для Lambda функций
+<![CDATA[# IAM Roles and Policies for Lambda functions
 
-# IAM Role для Telegram Bot Lambda
+# IAM Role for Telegram Bot Lambda
 resource "aws_iam_role" "lambda_telegram_bot" {
   name = "${local.project_name}-lambda-telegram-bot-${var.environment}"
 
@@ -22,13 +22,13 @@ resource "aws_iam_role" "lambda_telegram_bot" {
   })
 }
 
-# Базовая политика для Lambda (CloudWatch Logs)
+# Basic Lambda execution policy (CloudWatch Logs)
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   role       = aws_iam_role.lambda_telegram_bot.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Кастомная политика для доступа к AWS сервисам
+# Custom policy for AWS service access
 resource "aws_iam_role_policy" "lambda_telegram_bot_policy" {
   name = "${local.project_name}-lambda-telegram-bot-policy"
   role = aws_iam_role.lambda_telegram_bot.id
@@ -36,7 +36,7 @@ resource "aws_iam_role_policy" "lambda_telegram_bot_policy" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
-      # S3 доступ
+      # S3 access
       {
         Effect = "Allow"
         Action = [
@@ -54,7 +54,7 @@ resource "aws_iam_role_policy" "lambda_telegram_bot_policy" {
         ]
         Resource = try(aws_s3_bucket.callsum_storage[0].arn, "arn:aws:s3:::*")
       },
-      # DynamoDB доступ
+      # DynamoDB access
       {
         Effect = "Allow"
         Action = [
@@ -70,7 +70,7 @@ resource "aws_iam_role_policy" "lambda_telegram_bot_policy" {
           aws_dynamodb_table.rate_limits.arn
         ]
       },
-      # Secrets Manager доступ
+      # Secrets Manager access
       {
         Effect = "Allow"
         Action = [
@@ -88,6 +88,7 @@ resource "aws_iam_role_policy" "lambda_telegram_bot_policy" {
 
 # Outputs
 output "lambda_role_arn" {
-  description = "ARN IAM роли для Lambda"
+  description = "ARN of the Lambda IAM role"
   value       = aws_iam_role.lambda_telegram_bot.arn
 }
+]]>

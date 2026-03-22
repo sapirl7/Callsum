@@ -1,4 +1,4 @@
-# CloudWatch Dashboard для мониторинга всех компонентов
+# CloudWatch Dashboard for monitoring all components
 
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "${local.project_name}-dashboard-${var.environment}"

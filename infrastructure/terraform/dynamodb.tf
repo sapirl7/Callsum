@@ -1,8 +1,8 @@
-# DynamoDB таблица для хранения метаданных задач
+<![CDATA[# DynamoDB table for storing job metadata
 
 resource "aws_dynamodb_table" "callsum_jobs" {
   name           = var.dynamodb_table_name
-  billing_mode   = "PAY_PER_REQUEST"  # On-demand pricing (экономичнее для малой нагрузки)
+  billing_mode   = "PAY_PER_REQUEST"  # On-demand pricing (cost-effective for low traffic)
   hash_key       = "job_id"
 
   attribute {
@@ -20,7 +20,7 @@ resource "aws_dynamodb_table" "callsum_jobs" {
     type = "S"  # ISO timestamp string
   }
 
-  # Global Secondary Index для запросов по user_id
+  # Global Secondary Index for querying by user_id
   global_secondary_index {
     name            = "UserIdIndex"
     hash_key        = "user_id"
@@ -28,18 +28,18 @@ resource "aws_dynamodb_table" "callsum_jobs" {
     projection_type = "ALL"
   }
 
-  # TTL для автоудаления старых записей
+  # TTL for automatic cleanup of old records
   ttl {
     enabled        = true
-    attribute_name = "ttl"  # Unix timestamp когда удалить
+    attribute_name = "ttl"  # Unix timestamp for deletion
   }
 
-  # Point-in-time recovery для disaster recovery
+  # Point-in-time recovery for disaster recovery
   point_in_time_recovery {
     enabled = true
   }
 
-  # Шифрование at-rest
+  # Encryption at rest
   server_side_encryption {
     enabled = true
   }
@@ -49,7 +49,7 @@ resource "aws_dynamodb_table" "callsum_jobs" {
   })
 }
 
-# CloudWatch Alarm для мониторинга ошибок
+# CloudWatch Alarm for monitoring errors
 resource "aws_cloudwatch_metric_alarm" "dynamodb_errors" {
   alarm_name          = "${local.project_name}-dynamodb-errors-${var.environment}"
   comparison_operator = "GreaterThanThreshold"
@@ -69,11 +69,12 @@ resource "aws_cloudwatch_metric_alarm" "dynamodb_errors" {
 
 # Outputs
 output "dynamodb_table_name" {
-  description = "Имя DynamoDB таблицы"
+  description = "DynamoDB table name"
   value       = aws_dynamodb_table.callsum_jobs.name
 }
 
 output "dynamodb_table_arn" {
-  description = "ARN DynamoDB таблицы"
+  description = "DynamoDB table ARN"
   value       = aws_dynamodb_table.callsum_jobs.arn
 }
+]]>

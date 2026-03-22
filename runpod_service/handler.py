@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+<![CDATA[# -*- coding: utf-8 -*-
 """
-RunPod Serverless Handler - обработка аудио через ML модели.
-Выполняет транскрипцию, диаризацию и генерацию саммари.
+RunPod Serverless Handler - audio processing via ML models.
+Performs transcription, diarization, and summary generation.
 """
 
 import json
@@ -27,10 +27,10 @@ LLM_MODEL_NAME = "meta-llama/Meta-Llama-3.1-8B-Instruct"
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-logger.info("Используется устройство: %s", DEVICE)
+logger.info("Using device: %s", DEVICE)
 
 
-logger.info("Загрузка Whisper...")
+logger.info("Loading Whisper...")
 COMPUTE_TYPE = "float16" if DEVICE == "cuda" else "int8"
 whisper_model = WhisperModel(
     "large-v3",
@@ -38,18 +38,18 @@ whisper_model = WhisperModel(
     compute_type=COMPUTE_TYPE,
     download_root="/models/whisper",
 )
-logger.info("Whisper загружен")
+logger.info("Whisper loaded")
 
-logger.info("Загрузка Pyannote...")
+logger.info("Loading Pyannote...")
 diarization_pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-3.1",
     token=HF_TOKEN,
     cache_dir="/models/pyannote",
 )
 diarization_pipeline.to(torch.device(DEVICE))
-logger.info("Pyannote загружен")
+logger.info("Pyannote loaded")
 
-logger.info("Загрузка Llama 3.1...")
+logger.info("Loading Llama 3.1...")
 llm = LLM(
     model=LLM_MODEL_NAME,
     download_dir="/models/llama",
@@ -62,10 +62,13 @@ tokenizer = AutoTokenizer.from_pretrained(
     cache_dir="/models/llama",
     token=HF_TOKEN,
 )
-logger.info("Llama 3.1 8B загружен")
-logger.info("Все модели готовы")
+logger.info("Llama 3.1 8B loaded")
+logger.info("All models ready")
 
 
+# NOTE: The system prompt is intentionally in Russian because the application
+# processes Russian-language meetings and the LLM must respond in Russian.
+# If you need multi-language support, make this configurable via environment variables.
 SYSTEM_PROMPT = """Ты — AI-ассистент для анализа бизнес-встреч и звонков.
 
 Твоя задача — структурировать транскрипцию в JSON формате с двумя основными разделами:
@@ -114,7 +117,7 @@ SYSTEM_PROMPT = """Ты — AI-ассистент для анализа бизн
 
 
 def align_speakers_with_words(diarization, words):
-    """Сопоставляет слова со спикерами."""
+    """Aligns words with speakers from diarization output."""
     dialogue = []
 
     for word in words:
@@ -141,7 +144,7 @@ def align_speakers_with_words(diarization, words):
 
 
 def format_dialogue_for_llm(dialogue):
-    """Форматирует диалог для LLM."""
+    """Formats dialogue for LLM input."""
     if not dialogue:
         return ""
 
@@ -186,6 +189,7 @@ def format_dialogue_for_llm(dialogue):
 
 
 def build_summary_prompt(dialogue_text: str) -> str:
+    # NOTE: User message is in Russian to match the system prompt language.
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {
@@ -201,7 +205,7 @@ def build_summary_prompt(dialogue_text: str) -> str:
             add_generation_prompt=True,
         )
     except Exception as exc:
-        logger.warning("Не удалось применить chat template, используем fallback prompt: %s", exc)
+        logger.warning("Failed to apply chat template, using fallback prompt: %s", exc)
         return f"{SYSTEM_PROMPT}\n\nТранскрипция встречи:\n\n{dialogue_text}\n\nJSON:"
 
 
@@ -220,7 +224,7 @@ def send_progress_update(
     progress: int,
     message: str,
 ):
-    """Отправляет промежуточное обновление прогресса."""
+    """Sends an intermediate progress update to the callback URL."""
     if not callback_url or not chat_id:
         return
 
@@ -244,8 +248,8 @@ def send_progress_update(
 
 def handler(job):
     """
-    Главная функция обработки задачи.
-    Вызывается RunPod serverless при получении задачи.
+    Main job handler function.
+    Called by RunPod serverless when a task is received.
     """
     job_input = job["input"]
 
@@ -265,7 +269,7 @@ def handler(job):
     result_upload_url = job_input.get("result_upload_url")
     result_key = job_input.get("result_key")
 
-    logger.info("Начало обработки задачи %s", job_id)
+    logger.info("Starting job processing: %s", job_id)
 
     audio_path = None
 
@@ -276,7 +280,7 @@ def handler(job):
             job_id,
             chat_id,
             10,
-            "📥 Скачивание аудио...",
+            "📥 Downloading audio...",
         )
 
         with tempfile.NamedTemporaryFile(suffix=".ogg", delete=False) as tmp_audio:
@@ -287,13 +291,13 @@ def handler(job):
                 "audio_download_url is missing. Legacy AWS credentials are no longer supported in RunPod."
             )
 
-        logger.info("Скачивание аудио через presigned URL...")
+        logger.info("Downloading audio via presigned URL...")
         with httpx.Client(timeout=300.0) as client:
             response = client.get(audio_download_url)
             response.raise_for_status()
             with open(audio_path, "wb") as file_handle:
                 file_handle.write(response.content)
-        logger.info("Аудио скачано через presigned URL")
+        logger.info("Audio downloaded via presigned URL")
 
         send_progress_update(
             callback_url,
@@ -301,9 +305,9 @@ def handler(job):
             job_id,
             chat_id,
             20,
-            "🎙 Транскрибирую речь...",
+            "🎙 Transcribing speech...",
         )
-        logger.info("Шаг 1/3: Транскрипция...")
+        logger.info("Step 1/3: Transcription...")
 
         segments, info = whisper_model.transcribe(
             audio_path,
@@ -323,7 +327,7 @@ def handler(job):
                         }
                     )
 
-        logger.info("Транскрибировано %s слов", len(all_words))
+        logger.info("Transcribed %s words", len(all_words))
 
         send_progress_update(
             callback_url,
@@ -331,9 +335,9 @@ def handler(job):
             job_id,
             chat_id,
             50,
-            "👥 Определяю спикеров...",
+            "👥 Identifying speakers...",
         )
-        logger.info("Шаг 2/3: Определение спикеров...")
+        logger.info("Step 2/3: Speaker identification...")
 
         diarization = diarization_pipeline(audio_path)
 
@@ -341,13 +345,13 @@ def handler(job):
         for turn, _, speaker in diarization.itertracks(yield_label=True):
             speakers.add(speaker)
 
-        logger.info("Найдено спикеров: %s", len(speakers))
-        logger.info("Шаг 2.5/3: Сопоставление спикеров...")
+        logger.info("Speakers found: %s", len(speakers))
+        logger.info("Step 2.5/3: Aligning speakers with words...")
 
         dialogue = align_speakers_with_words(diarization, all_words)
         dialogue_text = format_dialogue_for_llm(dialogue)
 
-        logger.info("Диалог сформирован, длина: %s символов", len(dialogue_text))
+        logger.info("Dialogue formed, length: %s characters", len(dialogue_text))
 
         send_progress_update(
             callback_url,
@@ -355,9 +359,9 @@ def handler(job):
             job_id,
             chat_id,
             70,
-            "🤖 Генерирую саммари...",
+            "🤖 Generating summary...",
         )
-        logger.info("Шаг 3/3: Генерация саммари...")
+        logger.info("Step 3/3: Summary generation...")
 
         summary = None
         llm_error = None
@@ -377,17 +381,17 @@ def handler(job):
                 json_match = re.search(r"\{.*\}", summary_text, re.DOTALL)
                 if json_match:
                     summary = json.loads(json_match.group())
-                    logger.info("Саммари успешно создано")
+                    logger.info("Summary created successfully")
                 else:
                     summary = json.loads(summary_text)
-                    logger.info("Саммари создано fallback-парсингом")
+                    logger.info("Summary created via fallback parsing")
             except json.JSONDecodeError as exc:
-                logger.warning("Не удалось распарсить JSON от LLM: %s", exc)
+                logger.warning("Failed to parse JSON from LLM: %s", exc)
                 logger.debug("LLM response: %s", summary_text[:500])
                 llm_error = f"JSON parsing failed: {exc}"
                 summary = None
         except Exception as exc:
-            logger.error("Ошибка генерации LLM саммари: %s", exc, exc_info=True)
+            logger.error("LLM summary generation error: %s", exc, exc_info=True)
             llm_error = f"LLM generation failed: {exc}"
             summary = None
 
@@ -408,14 +412,14 @@ def handler(job):
 
         if llm_error:
             result["warning"] = "Summary generation failed, but transcript is available"
-            logger.warning("Задача %s завершена с предупреждением: LLM failed", job_id)
+            logger.warning("Job %s completed with warning: LLM failed", job_id)
 
         if not result_upload_url or not result_key:
             raise ValueError(
                 "result_upload_url is missing. Legacy AWS credentials are no longer supported in RunPod."
             )
 
-        logger.info("Загрузка результата через presigned URL...")
+        logger.info("Uploading result via presigned URL...")
         with httpx.Client(timeout=60.0) as client:
             response = client.put(
                 result_upload_url,
@@ -423,11 +427,11 @@ def handler(job):
                 headers={"Content-Type": "application/json"},
             )
             response.raise_for_status()
-        logger.info("Результат загружен через presigned URL")
+        logger.info("Result uploaded via presigned URL")
 
         if callback_url and chat_id:
             try:
-                logger.info("Отправка callback на %s", callback_url)
+                logger.info("Sending callback to %s", callback_url)
                 with httpx.Client(timeout=30.0) as client:
                     callback_response = client.post(
                         callback_url,
@@ -440,13 +444,13 @@ def handler(job):
                         headers=build_callback_headers(callback_token),
                     )
                     if callback_response.status_code == 200:
-                        logger.info("Callback отправлен успешно для job %s", job_id)
+                        logger.info("Callback sent successfully for job %s", job_id)
                     else:
                         logger.warning("Callback failed: %s", callback_response.status_code)
             except Exception as callback_error:
-                logger.error("Ошибка отправки callback: %s", callback_error)
+                logger.error("Error sending callback: %s", callback_error)
 
-        logger.info("Задача %s завершена успешно", job_id)
+        logger.info("Job %s completed successfully", job_id)
         return {
             "status": "success",
             "job_id": job_id,
@@ -454,7 +458,7 @@ def handler(job):
             "metadata": result["metadata"],
         }
     except Exception as exc:
-        logger.error("Ошибка обработки задачи %s: %s", job_id, exc, exc_info=True)
+        logger.error("Error processing job %s: %s", job_id, exc, exc_info=True)
 
         error_result = {
             "job_id": job_id,
@@ -471,11 +475,11 @@ def handler(job):
                         headers={"Content-Type": "application/json"},
                     )
             except Exception as upload_error:
-                logger.error("Ошибка загрузки результата ошибки: %s", upload_error)
+                logger.error("Error uploading error result: %s", upload_error)
 
         if callback_url and chat_id:
             try:
-                logger.info("Отправка error callback на %s", callback_url)
+                logger.info("Sending error callback to %s", callback_url)
                 with httpx.Client(timeout=30.0) as client:
                     client.post(
                         callback_url,
@@ -488,7 +492,7 @@ def handler(job):
                         headers=build_callback_headers(callback_token),
                     )
             except Exception as callback_error:
-                logger.error("Ошибка отправки error callback: %s", callback_error)
+                logger.error("Error sending error callback: %s", callback_error)
 
         return {
             "status": "error",
@@ -500,7 +504,7 @@ def handler(job):
             try:
                 os.remove(audio_path)
             except OSError as cleanup_error:
-                logger.warning("Не удалось удалить временный файл %s: %s", audio_path, cleanup_error)
+                logger.warning("Failed to delete temporary file %s: %s", audio_path, cleanup_error)
 
 
 runpod_handler = handler
@@ -508,3 +512,4 @@ runpod_handler = handler
 
 if __name__ == "__main__":
     runpod.serverless.start({"handler": handler})
+]]>

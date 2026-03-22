@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Telegram Bot для приема голосовых сообщений и отправки результатов.
-Деплоится как AWS Lambda функция.
+Telegram Bot for receiving voice messages and sending results.
+Deployed as an AWS Lambda function.
 """
 
 import asyncio
@@ -88,9 +88,9 @@ def get_aws_region() -> str:
 
 def get_secret(secret_arn: Optional[str], key: Optional[str] = None, fallback_env_var: Optional[str] = None):
     """
-    Получает секрет из AWS Secrets Manager.
+    Retrieves a secret from AWS Secrets Manager.
 
-    Если secret_arn не передан или секрет недоступен, использует fallback переменную окружения.
+    Falls back to an environment variable if secret_arn is not provided or the secret is unavailable.
     """
     if not secret_arn:
         return os.getenv(fallback_env_var) if fallback_env_var else None
@@ -101,7 +101,7 @@ def get_secret(secret_arn: Optional[str], key: Optional[str] = None, fallback_en
         secret = json.loads(response["SecretString"])
         return secret if key is None else secret.get(key)
     except Exception as exc:
-        logger.error("Ошибка получения секрета %s: %s", secret_arn, exc)
+        logger.error("Error retrieving secret %s: %s", secret_arn, exc)
         return os.getenv(fallback_env_var) if fallback_env_var else None
 
 
@@ -226,16 +226,16 @@ def build_application() -> Application:
 
 def estimate_processing_time(duration_seconds: int) -> int:
     """
-    Оценивает время обработки аудио.
+    Estimates audio processing time.
 
-    1 час аудио ≈ 20 минут обработки на RTX 3090
+    1 hour of audio ≈ 20 minutes of processing on RTX 3090.
     """
     return max(1, int(duration_seconds / 60 * 0.33))
 
 
 def check_rate_limit(user_id: int) -> dict:
     """
-    Проверяет rate limit для пользователя.
+    Checks rate limit for a user.
 
     Returns:
         dict: {'allowed': bool, 'reset_in': int (seconds), 'message': str}
@@ -293,7 +293,7 @@ def check_rate_limit(user_id: int) -> dict:
 
 
 def increment_rate_limit(user_id: int):
-    """Инкрементирует счетчик запросов для пользователя."""
+    """Increments the request counter for a user."""
     runtime = get_runtime_services()
 
     try:
@@ -333,7 +333,7 @@ def create_job_record(
     chat_id: Optional[int] = None,
     progress_message_id: Optional[int] = None,
 ):
-    """Создает запись о задаче в DynamoDB."""
+    """Creates a job record in DynamoDB."""
     runtime = get_runtime_services()
 
     try:
@@ -354,9 +354,9 @@ def create_job_record(
             item["progress_message_id"] = progress_message_id
 
         runtime.jobs_table.put_item(Item=item)
-        logger.info("Создана запись задачи %s", job_id)
+        logger.info("Job record created: %s", job_id)
     except Exception as exc:
-        logger.error("Ошибка создания записи в DynamoDB: %s", exc)
+        logger.error("Error creating DynamoDB record: %s", exc)
 
 
 def update_job_status(
@@ -365,7 +365,7 @@ def update_job_status(
     progress: Optional[int] = None,
     error_message: Optional[str] = None,
 ):
-    """Обновляет статус задачи."""
+    """Updates job status."""
     runtime = get_runtime_services()
 
     try:
@@ -388,7 +388,7 @@ def update_job_status(
             ExpressionAttributeValues=expr_attr_values,
         )
     except Exception as exc:
-        logger.error("Ошибка обновления статуса: %s", exc)
+        logger.error("Error updating status: %s", exc)
 
 
 def set_progress_message_id(job_id: str, message_id: int):
@@ -401,13 +401,13 @@ def set_progress_message_id(job_id: str, message_id: int):
             ExpressionAttributeValues={":msg_id": message_id},
         )
     except Exception as exc:
-        logger.error("Ошибка сохранения progress_message_id: %s", exc)
+        logger.error("Error saving progress_message_id: %s", exc)
 
 
 def generate_presigned_urls(s3_key: str, job_id: str, user_id: int) -> Optional[dict]:
     """
-    Генерирует presigned URLs для S3 операций.
-    Безопаснее чем отправлять AWS credentials в RunPod.
+    Generates presigned URLs for S3 operations.
+    More secure than sending AWS credentials to RunPod.
     """
     runtime = get_runtime_services()
 
@@ -468,9 +468,9 @@ def get_audio_extension(voice, telegram_file) -> str:
 
 async def trigger_runpod(job_id: str, s3_key: str, user_id: int, chat_id: int):
     """
-    Пробуждает RunPod serverless endpoint для обработки.
-    Использует retry с exponential backoff.
-    Использует presigned URLs вместо AWS credentials.
+    Triggers RunPod serverless endpoint for processing.
+    Uses retry with exponential backoff.
+    Uses presigned URLs instead of AWS credentials.
     """
     runtime = validate_processing_runtime()
     presigned_urls = generate_presigned_urls(s3_key, job_id, user_id)
@@ -641,7 +641,7 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     job_id = str(uuid.uuid4())
-    logger.info("Получено аудио от user %s, job_id: %s", user_id, job_id)
+    logger.info("Audio received from user %s, job_id: %s", user_id, job_id)
 
     await update.message.reply_text(
         f"✅ *Получил аудио!*\n\n"
@@ -673,7 +673,7 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             },
         )
 
-        logger.info("Файл загружен в S3: %s", s3_key)
+        logger.info("File uploaded to S3: %s", s3_key)
         create_job_record(job_id, user_id, s3_key, voice.duration, chat_id=chat_id)
         increment_rate_limit(user_id)
 
@@ -705,7 +705,7 @@ async def voice_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown",
         )
     except Exception as exc:
-        logger.error("Ошибка обработки голосового: %s", exc, exc_info=True)
+        logger.error("Error processing voice message: %s", exc, exc_info=True)
         update_job_status(job_id, "failed", error_message=str(exc))
         await update.message.reply_text(
             "❌ *Ошибка загрузки*\n\n"
@@ -804,7 +804,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text(message, parse_mode="Markdown")
     except Exception as exc:
-        logger.error("Ошибка получения статуса: %s", exc)
+        logger.error("Error retrieving status: %s", exc)
         await update.message.reply_text(
             "❌ Ошибка получения статуса задачи.\nПопробуйте позже."
         )
@@ -1055,5 +1055,5 @@ def lambda_handler(event, context):
 
 
 if __name__ == "__main__":
-    print("Для локального тестирования используйте polling режим")
-    print("Запустите: python3 telegram_bot/bot_local.py")
+    print("For local testing use polling mode")
+    print("Run: python3 telegram_bot/bot_local.py")

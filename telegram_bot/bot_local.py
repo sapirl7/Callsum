@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+<![CDATA[# -*- coding: utf-8 -*-
 """
-Локальная версия бота для тестирования (polling режим).
-Для разработки и отладки перед деплоем на AWS Lambda.
+Local bot version for testing (polling mode).
+For development and debugging before deploying to AWS Lambda.
 """
 
 import asyncio
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 async def main():
-    """Запуск бота в polling режиме."""
-    logger.info("Запуск бота в режиме polling...")
+    """Start the bot in polling mode."""
+    logger.info("Starting bot in polling mode...")
 
     application = build_application()
 
@@ -30,12 +30,12 @@ async def main():
     await application.start()
     await application.updater.start_polling(allowed_updates=Update.ALL_TYPES)
 
-    logger.info("Бот запущен! Нажмите Ctrl+C для остановки.")
+    logger.info("Bot started! Press Ctrl+C to stop.")
 
     try:
         await asyncio.Event().wait()
     except KeyboardInterrupt:
-        logger.info("Остановка бота...")
+        logger.info("Stopping bot...")
     finally:
         await application.updater.stop()
         await application.stop()
@@ -44,3 +44,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+]]>

@@ -1,5 +1,5 @@
-# S3 Bucket для хранения аудио и результатов
-# Создается только если НЕ используется DigitalOcean Spaces
+<![CDATA[# S3 Bucket for audio and results storage
+# Created only if DigitalOcean Spaces is NOT used
 
 resource "aws_s3_bucket" "callsum_storage" {
   count  = var.use_digitalocean_spaces ? 0 : 1
@@ -10,7 +10,7 @@ resource "aws_s3_bucket" "callsum_storage" {
   })
 }
 
-# Включаем версионирование
+# Enable versioning
 resource "aws_s3_bucket_versioning" "callsum_storage" {
   count  = var.use_digitalocean_spaces ? 0 : 1
   bucket = aws_s3_bucket.callsum_storage[0].id
@@ -20,7 +20,7 @@ resource "aws_s3_bucket_versioning" "callsum_storage" {
   }
 }
 
-# Включаем шифрование по умолчанию (AES-256)
+# Enable default encryption (AES-256)
 resource "aws_s3_bucket_server_side_encryption_configuration" "callsum_storage" {
   count  = var.use_digitalocean_spaces ? 0 : 1
   bucket = aws_s3_bucket.callsum_storage[0].id
@@ -32,7 +32,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "callsum_storage" 
   }
 }
 
-# Блокируем публичный доступ
+# Block public access
 resource "aws_s3_bucket_public_access_block" "callsum_storage" {
   count  = var.use_digitalocean_spaces ? 0 : 1
   bucket = aws_s3_bucket.callsum_storage[0].id
@@ -43,7 +43,7 @@ resource "aws_s3_bucket_public_access_block" "callsum_storage" {
   restrict_public_buckets = true
 }
 
-# Lifecycle правила для автоудаления старых файлов
+# Lifecycle rules for automatic cleanup of old files
 resource "aws_s3_bucket_lifecycle_configuration" "callsum_storage" {
   count  = var.use_digitalocean_spaces ? 0 : 1
   bucket = aws_s3_bucket.callsum_storage[0].id
@@ -57,7 +57,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "callsum_storage" {
     }
 
     expiration {
-      days = 30  # Удаляем аудио старше 30 дней
+      days = 30  # Delete audio older than 30 days
     }
 
     noncurrent_version_expiration {
@@ -74,7 +74,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "callsum_storage" {
     }
 
     expiration {
-      days = 90  # Результаты храним 90 дней
+      days = 90  # Keep results for 90 days
     }
   }
 }
@@ -82,11 +82,12 @@ resource "aws_s3_bucket_lifecycle_configuration" "callsum_storage" {
 
 # Outputs
 output "s3_bucket_name" {
-  description = "Имя S3 bucket (или DigitalOcean Space)"
+  description = "S3 bucket name (or DigitalOcean Space name)"
   value       = var.use_digitalocean_spaces ? var.s3_bucket_name : aws_s3_bucket.callsum_storage[0].id
 }
 
 output "s3_bucket_arn" {
-  description = "ARN S3 bucket (только для AWS S3)"
+  description = "S3 bucket ARN (AWS S3 only)"
   value       = var.use_digitalocean_spaces ? "N/A (using DigitalOcean Spaces)" : aws_s3_bucket.callsum_storage[0].arn
 }
+]]>
