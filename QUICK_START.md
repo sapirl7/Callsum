@@ -1,4 +1,4 @@
-<![CDATA[# ⚡ Callsum — Quick Start
+# ⚡ Callsum — Quick Start
 
 > **Status:** Supplementary quick-start guide.
 > **Canonical handoff documents:** `docs/HANDOFF_CHECKLIST.md`, `docs/PROJECT_STATUS.md`, `docs/DEPLOYMENT_GUIDE.md`.
@@ -121,4 +121,3 @@ Send a voice message to your bot → get a summary back (~2–3 min).
 - [ ] Terraform updated with RunPod credentials
 - [ ] Telegram webhook set
 - [ ] Bot tested and working
-]]>

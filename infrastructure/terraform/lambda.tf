@@ -1,4 +1,4 @@
-<![CDATA[# Lambda function for Telegram bot
+# Lambda function for Telegram bot
 
 # Lambda code archive (assumes code has been built)
 data "archive_file" "telegram_bot_lambda" {
@@ -143,4 +143,3 @@ output "lambda_function_name" {
   description = "Name of the Lambda function"
   value       = aws_lambda_function.telegram_bot.function_name
 }
-]]>

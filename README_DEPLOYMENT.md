@@ -1,4 +1,4 @@
-<![CDATA[# 🚀 Callsum — Deployment Summary
+# 🚀 Callsum — Deployment Summary
 
 > **Status:** Historical summary of changes. Not a source of truth.
 > **Canonical handoff documents:** `docs/HANDOFF_CHECKLIST.md`, `docs/PROJECT_STATUS.md`, `docs/DEPLOYMENT_GUIDE.md`.
@@ -62,4 +62,3 @@ The project has been brought to **deployment candidate** status: critical blocke
 ## 📖 Documentation
 
 See [docs/README.md](docs/README.md) for the full documentation index.
-]]>

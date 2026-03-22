@@ -1,4 +1,4 @@
-<![CDATA[# DynamoDB table for Rate Limiting
+# DynamoDB table for Rate Limiting
 
 resource "aws_dynamodb_table" "rate_limits" {
   name         = "${var.dynamodb_table_name}-rate-limits"
@@ -37,4 +37,3 @@ output "rate_limits_table_name" {
   description = "Rate Limiting table name"
   value       = aws_dynamodb_table.rate_limits.name
 }
-]]>

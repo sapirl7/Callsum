@@ -1,4 +1,4 @@
-<![CDATA[## Summary
+## Summary
 
 Brief description of changes.
 
@@ -16,4 +16,3 @@ Brief description of changes.
 - [ ] No secrets or credentials in code
 - [ ] Documentation updated (if applicable)
 - [ ] Terraform validates (`terraform validate`)
-]]>

@@ -1,4 +1,4 @@
-<![CDATA[#!/bin/bash
+#!/bin/bash
 # Pre-deployment validation script
 # Checks configuration before deployment
 
@@ -199,4 +199,3 @@ else
     echo "Ready to deploy!"
     exit 0
 fi
-]]>

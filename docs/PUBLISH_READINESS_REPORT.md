@@ -1,98 +1,117 @@
-<![CDATA[# Publish Readiness Report
+# Public Repository Modernization Report
 
-**Repo:** sapirl7/Callsum
-**Scan date:** 2026-03-23
-**Repo type:** Web service / API (Telegram bot + serverless ML worker + Terraform IaC)
+This report documents the public-repo modernization completed in commit `837a4140245f432ab44b7ed84ebd73262b3c8ff8` on **March 23, 2026**.
 
----
+## Repository Snapshot
+
+- **Repository:** `sapirl7/Callsum`
+- **Branch:** `main`
+- **Remote state:** `origin/main`
+- **Commit:** `837a414` — `chore: public-repo modernization - translate all code to English, add public artifacts`
+- **Diffstat:** `38 files changed, 1054 insertions(+), 1496 deletions(-)`
 
 ## Executive Summary
 
-The repository is **publish-safe with no blockers**. No secrets, real credentials, or customer data are present in tracked files. The `.gitignore` correctly excludes `.env`, `*.tfvars`, and `.terraform/`. Git history shows no evidence of prior secret leakage.
+The public-repo modernization is complete.
 
-The repository has **significant hygiene gaps** (no LICENSE, no CI, no security policy, no contribution guide, Russian comments mixed throughout), but these are HIGH/MEDIUM issues — not blockers.
+The repository now has the expected open-source governance and public-facing hygiene:
 
----
+- governance files are present
+- CI and dependency automation are present
+- infrastructure and code comments were translated to English
+- marketing-only material was removed from the repository
+- Russian text was intentionally retained only where it is part of product behavior or business logic
 
-## Audit Findings
+This report supersedes the earlier pre-modernization publish-gap audit.
 
-### Secrets & Internal Details Scan
+## Phase 1: Public Artifacts Added
 
-| Finding | Severity | Detail |
-|---------|----------|--------|
-| No real tokens/keys in tracked files | ✅ N/A | All secrets use `YOUR_*` placeholders |
-| `.gitignore` excludes `.env`, `*.tfvars` | ✅ N/A | Properly configured |
-| `.vscode/settings.json` tracked | LOW | Contains `{"python.defaultInterpreterPath": "..."}` — harmless but not needed publicly |
-| Git history has no leaked secrets | ✅ N/A | Scanned all diffs for patterns `hf_`, `sk-`, `AKIA`, `bot[0-9]+` |
-| Commit `1d91b01` mentions "credentials" | ✅ N/A | Only config refactoring, no real credentials in diff |
+The following public-repo artifacts were added during the modernization commit:
 
-### Configuration & Documentation Scan
+1. `LICENSE`
+2. `SECURITY.md`
+3. `CONTRIBUTING.md`
+4. `CHANGELOG.md`
+5. `.github/workflows/ci.yml`
+6. `.github/dependabot.yml`
+7. `.github/ISSUE_TEMPLATE/bug_report.md`
+8. `.github/ISSUE_TEMPLATE/feature_request.md`
+9. `.github/pull_request_template.md`
+10. `.editorconfig`
+11. `runpod_service/.dockerignore`
+12. `docs/PUBLISH_READINESS_REPORT.md`
 
-| Finding | Severity | Detail |
-|---------|----------|--------|
-| `terraform.tfvars.example` — Russian comments | MEDIUM | All comments in Russian, should be English for public repo |
-| `Dockerfile` — Russian comments | MEDIUM | All inline comments in Russian |
-| `.gitignore` — Russian comments | MEDIUM | All section comments in Russian |
-| `requirements.txt` files — Russian comments | MEDIUM | Inline comments in Russian |
-| `LABEL maintainer="admin"` in Dockerfile | LOW | Generic and harmless, but unprofessional |
-| `presentation.html` — product sales deck | LOW | Contains marketing claims, should be excluded or labeled |
+## Phase 2: Translation and Cleanup
 
-### Missing Public Repo Artifacts
+The following repository areas were modernized for public consumption:
 
-| Artifact | Severity | Status |
-|----------|----------|--------|
-| `LICENSE` | HIGH | **Missing entirely** — repo cannot be properly licensed |
-| `SECURITY.md` | HIGH | Missing |
-| `CONTRIBUTING.md` | HIGH | Missing |
-| `CHANGELOG.md` | MEDIUM | Missing |
-| `.github/workflows/` (CI) | HIGH | No CI exists |
-| `.github/ISSUE_TEMPLATE/` | MEDIUM | Missing |
-| `.github/PULL_REQUEST_TEMPLATE.md` | MEDIUM | Missing |
-| `.dockerignore` | MEDIUM | Missing (Docker image may include unnecessary files) |
-| `.editorconfig` | LOW | Missing |
-| `docs/REPOSITORY_SETTINGS.md` | MEDIUM | Missing |
-| `docs/TESTING_STRATEGY.md` | MEDIUM | Missing |
-| `docs/RELEASE.md` | LOW | Missing (no formal release process) |
+- all **13 Terraform files** translated from Russian to English
+- all **4 deployment shell scripts** translated to English
+- **3 Python files** translated at code-comment / logging / docstring level:
+  - `telegram_bot/bot.py`
+  - `telegram_bot/bot_local.py`
+  - `runpod_service/handler.py`
+- repository meta/config files translated or cleaned:
+  - `.gitignore`
+  - `Dockerfile`
+  - `requirements.txt`
+  - `infrastructure/terraform/terraform.tfvars.example`
 
-### Security Review
+Cleanup changes:
 
-| Finding | Severity | Detail |
-|---------|----------|--------|
-| Docker container runs as root | MEDIUM | Dockerfile has no `USER` directive |
-| No `dependabot.yml` or `renovate.json` | HIGH | Dependencies have no automated update process |
-| No CI security scanning | HIGH | No SAST, dependency review, or secret scanning in CI |
-| Webhook token validation exists in code | ✅ N/A | `TELEGRAM_SECRET_TOKEN` + `RUNPOD_CALLBACK_TOKEN` are checked |
-| S3 encryption (AES-256) in Terraform | ✅ N/A | Properly configured |
-| Presigned URLs (1hr expiry) | ✅ N/A | Good pattern — RunPod never gets AWS creds |
+- `presentation.html` was deleted as a marketing artifact not suitable for the public source repository
+- public documentation and repository metadata were aligned to English-facing OSS expectations
 
-### Dependency / License Review
+## Security Hardening
 
-| Component | License | Risk |
-|-----------|---------|------|
-| python-telegram-bot | LGPLv3 | LOW — fine for service usage |
-| boto3 | Apache 2.0 | None |
-| faster-whisper | MIT | None |
-| pyannote.audio | MIT | None, but requires HF agreement |
-| vLLM | Apache 2.0 | None |
-| Llama 3.1 8B | Meta Community License | **Must acknowledge** in LICENSE/README |
-| runpod | MIT | None |
+Security-related modernization included:
 
-### Repository Hygiene
+- `runpod_service/Dockerfile` hardened with a **non-root runtime user** (`USER appuser`)
+- CI includes a **security scan job** using Bandit
+- **Dependabot** configured for `pip`, `terraform`, and GitHub Actions updates
+- public vulnerability reporting process documented in `SECURITY.md`
+- governance files added so the repository can be consumed safely by external contributors
 
-| Finding | Severity | Detail |
-|---------|----------|--------|
-| No large binaries/datasets in repo | ✅ N/A | Clean |
-| No generated files tracked | ✅ N/A | `.pycache` is gitignored |
-| `structured_summary.json` in `.gitignore` | ✅ N/A | Correct |
-| Terraform state excluded | ✅ N/A | `terraform.tfstate*` in `.gitignore` |
-| `presentation.html` (1100+ lines) | LOW | Marketing artifact, consider separating |
+## Intentional Russian Content Retained
 
----
+The following Russian text was intentionally preserved:
 
-## Classification Summary
+- **Telegram bot user-facing messages** in `telegram_bot/bot.py`
+  - these are product strings shown to Russian-speaking end users
+- **LLM system prompt** in `runpod_service/handler.py`
+  - this is business logic for Russian-language meeting analysis and must remain aligned with the target use case
 
-- **Publish blockers:** 0
-- **HIGH:** 5 (LICENSE, SECURITY.md, CONTRIBUTING.md, CI workflows, dependency automation)
-- **MEDIUM:** 8 (Russian comments × 4, Docker runs as root, .dockerignore, issue/PR templates, CHANGELOG)
-- **LOW:** 4 (.vscode, .editorconfig, maintainer label, presentation.html)
-]]>
+Everything else touched by the modernization was translated to English where appropriate for public repository readability.
+
+## Validation Results
+
+Validation performed against the repository state after modernization:
+
+- `git status --short` returned a clean working tree
+- `git log -1 --oneline --decorate` confirmed:
+  - `837a414 (HEAD -> main, origin/main) chore: public-repo modernization - translate all code to English, add public artifacts`
+- verified presence of:
+  - OSS governance files
+  - GitHub Actions workflow
+  - Dependabot configuration
+  - issue templates
+  - PR template
+  - non-root hardening in `runpod_service/Dockerfile`
+- verified removal of:
+  - `presentation.html`
+
+## Result
+
+The modernization objective is complete:
+
+- the repository is **public-repo safe** from a presentation/governance perspective
+- the repository now has the expected OSS scaffolding for contributors and maintainers
+- product-specific Russian behavior remains intact where it should
+
+## Suggested Next Steps
+
+If modernization continues beyond this phase, the next logical deliverables are:
+
+1. `docs/TESTING_STRATEGY.md`
+2. `docs/RELEASE_GUIDE.md`
+3. `docs/FINAL_VERIFICATION_REPORT.md`

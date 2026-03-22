@@ -1,4 +1,4 @@
-<![CDATA[# 🚀 Callsum — Full Deployment Walkthrough
+# 🚀 Callsum — Full Deployment Walkthrough
 
 > **Status:** Extended long-form deployment guide.
 > For handoff and final acceptance, use `docs/HANDOFF_CHECKLIST.md` and `docs/PROJECT_STATUS.md`.
@@ -276,4 +276,3 @@ terraform destroy  # Enter: yes
 ```
 
 ⚠️ This will delete all data in S3, DynamoDB, Lambda, API Gateway, and Secrets Manager.
-]]>

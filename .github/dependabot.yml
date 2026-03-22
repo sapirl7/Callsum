@@ -1,4 +1,4 @@
-<![CDATA[version: 2
+version: 2
 updates:
   - package-ecosystem: pip
     directory: /telegram_bot
@@ -39,4 +39,3 @@ updates:
     labels:
       - infrastructure
     open-pull-requests-limit: 3
-]]>

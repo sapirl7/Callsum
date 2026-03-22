@@ -1,4 +1,4 @@
-<![CDATA[# 🌊 Using DigitalOcean Spaces Instead of AWS S3
+# 🌊 Using DigitalOcean Spaces Instead of AWS S3
 
 ## Why Use DigitalOcean Spaces?
 
@@ -260,4 +260,3 @@ Terraform will create an AWS S3 bucket and update Lambda environment variables.
 - [ ] `terraform apply` completed successfully
 - [ ] Bot test passed
 - [ ] Files appear in DigitalOcean Space
-]]>

@@ -1,4 +1,4 @@
-<![CDATA[# Contributing to Callsum
+# Contributing to Callsum
 
 Thank you for your interest in contributing to Callsum!
 
@@ -104,4 +104,3 @@ chore: update dependencies
 ## Questions?
 
 Open a [GitHub Discussion](https://github.com/sapirl7/Callsum/discussions) or file an issue.
-]]>

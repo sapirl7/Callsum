@@ -1,4 +1,4 @@
-<![CDATA[# Project Status
+# Project Status
 
 Last updated: March 22, 2026
 
@@ -51,4 +51,3 @@ Critical blockers from the audit have been resolved in code and IaC, but product
 - `DEPLOYMENT_README.md`
 - `README_DEPLOYMENT.md`
 - `presentation.html`
-]]>

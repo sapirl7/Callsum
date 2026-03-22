@@ -1,4 +1,4 @@
-<![CDATA[# API Gateway for Telegram Webhook
+# API Gateway for Telegram Webhook
 
 resource "aws_api_gateway_rest_api" "telegram_webhook" {
   name        = "${local.project_name}-telegram-webhook-${var.environment}"
@@ -232,4 +232,3 @@ output "api_gateway_id" {
   description = "API Gateway ID"
   value       = aws_api_gateway_rest_api.telegram_webhook.id
 }
-]]>

@@ -1,4 +1,4 @@
-<![CDATA[# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Local bot version for testing (polling mode).
 For development and debugging before deploying to AWS Lambda.
@@ -44,4 +44,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-]]>

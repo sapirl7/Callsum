@@ -1,4 +1,4 @@
-<![CDATA[# API Reference
+# API Reference
 
 Callsum exposes a minimal external API surface through AWS API Gateway.
 
@@ -166,4 +166,3 @@ The final result stored in S3 and sent via callback:
   "warning": null
 }
 ```
-]]>

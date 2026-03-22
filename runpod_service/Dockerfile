@@ -1,4 +1,4 @@
-<![CDATA[# RunPod Serverless Dockerfile for audio processing
+# RunPod Serverless Dockerfile for audio processing
 # Base image with CUDA
 FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
 
@@ -69,4 +69,3 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 
 # RunPod serverless handler
 CMD ["python3", "-u", "handler.py"]
-]]>

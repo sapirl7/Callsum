@@ -1,4 +1,4 @@
-<![CDATA[#!/bin/bash
+#!/bin/bash
 # Build Lambda artifact with vendored Python dependencies.
 
 set -euo pipefail
@@ -20,4 +20,3 @@ python3 -m pip install \
 /bin/cp "$SOURCE_DIR/bot.py" "$BUILD_DIR/bot.py"
 
 echo "✅ Lambda package ready: $BUILD_DIR"
-]]>

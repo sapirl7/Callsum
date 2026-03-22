@@ -1,4 +1,4 @@
-<![CDATA[# Security Policy
+# Security Policy
 
 ## Supported Versions
 
@@ -46,4 +46,3 @@ For detailed architecture, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 - Dependencies are monitored via [Dependabot](.github/dependabot.yml)
 - CI runs security checks on every pull request
-]]>

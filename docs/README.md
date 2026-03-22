@@ -1,4 +1,4 @@
-<![CDATA[# 📖 Documentation Index
+# 📖 Documentation Index
 
 Navigate the Callsum documentation by topic.
 
@@ -11,6 +11,7 @@ Navigate the Callsum documentation by topic.
 | [README.md](../README.md) | Project overview, quick start, cost breakdown |
 | [HANDOFF_CHECKLIST.md](HANDOFF_CHECKLIST.md) | Step-by-step deployment & verification checklist |
 | [PROJECT_STATUS.md](PROJECT_STATUS.md) | Current state: what works and what needs staging |
+| [PUBLISH_READINESS_REPORT.md](PUBLISH_READINESS_REPORT.md) | Public-repo modernization and publish-safe status |
 
 ## 🏗️ Technical Reference
 
@@ -30,4 +31,3 @@ Navigate the Callsum documentation by topic.
 | [../DEPLOYMENT_README.md](../DEPLOYMENT_README.md) | Legacy deployment summary |
 | [../DEPLOYMENT_GUIDE_FULL.md](../DEPLOYMENT_GUIDE_FULL.md) | Legacy extended deployment guide |
 | [../README_DEPLOYMENT.md](../README_DEPLOYMENT.md) | Legacy deployment changelog |
-]]>

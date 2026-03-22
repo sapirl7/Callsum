@@ -1,4 +1,4 @@
-<![CDATA[#!/bin/bash
+#!/bin/bash
 # AWS infrastructure deployment script via Terraform
 
 set -e  # Stop on errors
@@ -135,4 +135,3 @@ terraform output summary
 
 echo ""
 echo -e "${GREEN}🎉 Done!${NC}"
-]]>

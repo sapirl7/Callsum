@@ -1,4 +1,4 @@
-<![CDATA[# Terraform Variables
+# Terraform Variables
 
 variable "aws_region" {
   description = "AWS region for deployment"
@@ -138,4 +138,3 @@ variable "custom_system_prompt" {
   type        = string
   default     = ""
 }
-]]>

@@ -1,4 +1,4 @@
-<![CDATA[# S3 Bucket for audio and results storage
+# S3 Bucket for audio and results storage
 # Created only if DigitalOcean Spaces is NOT used
 
 resource "aws_s3_bucket" "callsum_storage" {
@@ -90,4 +90,3 @@ output "s3_bucket_arn" {
   description = "S3 bucket ARN (AWS S3 only)"
   value       = var.use_digitalocean_spaces ? "N/A (using DigitalOcean Spaces)" : aws_s3_bucket.callsum_storage[0].arn
 }
-]]>

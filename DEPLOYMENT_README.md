@@ -1,4 +1,4 @@
-<![CDATA[# 🚀 Callsum — Deployment Guide (Summary)
+# 🚀 Callsum — Deployment Guide (Summary)
 
 > **Status:** Supplementary overview guide.
 > **Canonical handoff documents:** `docs/HANDOFF_CHECKLIST.md`, `docs/PROJECT_STATUS.md`, `docs/DEPLOYMENT_GUIDE.md`.
@@ -87,4 +87,3 @@ See full troubleshooting in [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md#
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE)
-]]>

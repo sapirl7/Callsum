@@ -1,4 +1,4 @@
-<![CDATA[#!/bin/bash
+#!/bin/bash
 # ML service deployment script for RunPod
 
 set -euo pipefail
@@ -134,4 +134,3 @@ echo "Next steps:"
 echo "1. Navigate to ../infrastructure/terraform"
 echo "2. Run terraform apply"
 echo "3. Verify Telegram webhook and full processing cycle"
-]]>

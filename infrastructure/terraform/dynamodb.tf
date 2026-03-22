@@ -1,4 +1,4 @@
-<![CDATA[# DynamoDB table for storing job metadata
+# DynamoDB table for storing job metadata
 
 resource "aws_dynamodb_table" "callsum_jobs" {
   name           = var.dynamodb_table_name
@@ -77,4 +77,3 @@ output "dynamodb_table_arn" {
   description = "DynamoDB table ARN"
   value       = aws_dynamodb_table.callsum_jobs.arn
 }
-]]>

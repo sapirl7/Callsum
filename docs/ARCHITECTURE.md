@@ -1,4 +1,4 @@
-<![CDATA[# Architecture
+# Architecture
 
 ## System Overview
 
@@ -151,4 +151,3 @@ s3://callsum-prod/
 DynamoDB tables:
 - `callsum-jobs` — job tracking (job_id, status, progress, timestamps)
 - `callsum-jobs-rate-limits` — per-user rate counters with TTL
-]]>

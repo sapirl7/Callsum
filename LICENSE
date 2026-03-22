@@ -1,4 +1,4 @@
-<![CDATA[MIT License
+MIT License
 
 Copyright (c) 2026 Callsum Contributors
 
@@ -28,4 +28,3 @@ The ML model weights used by this project have their own licenses:
 - Pyannote: MIT License
 - Llama 3.1: Meta Community License Agreement
 - vLLM: Apache 2.0
-]]>

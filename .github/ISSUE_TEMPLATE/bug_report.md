@@ -1,4 +1,4 @@
-<![CDATA[---
+---
 name: Bug Report
 about: Report a bug or unexpected behavior
 title: "[BUG] "
@@ -35,4 +35,3 @@ What actually happened.
 ```
 Paste relevant CloudWatch or RunPod logs here
 ```
-]]>

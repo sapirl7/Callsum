@@ -1,4 +1,4 @@
-<![CDATA[# Configuration Reference
+# Configuration Reference
 
 All configurable parameters, organized by component.
 
@@ -92,4 +92,3 @@ flowchart LR
 - Secrets (tokens, keys) → **Secrets Manager** (never in env vars in production)
 - Configuration (limits, URLs) → **Lambda environment variables** (set via Terraform)
 - Local dev → `.env` file or direct env vars
-]]>

@@ -1,4 +1,4 @@
-<![CDATA[# AWS Budget for cost control
+# AWS Budget for cost control
 
 resource "aws_budgets_budget" "monthly_cost" {
   name              = "${local.project_name}-monthly-budget-${var.environment}"
@@ -85,4 +85,3 @@ output "budget_name" {
   description = "Name of the created budget"
   value       = aws_budgets_budget.monthly_cost.name
 }
-]]>

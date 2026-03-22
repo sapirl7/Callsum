@@ -1,4 +1,4 @@
-<![CDATA[# AWS Secrets Manager for storing tokens
+# AWS Secrets Manager for storing tokens
 
 # Telegram Bot Token
 resource "aws_secretsmanager_secret" "telegram_bot_token" {
@@ -99,4 +99,3 @@ output "do_spaces_keys_arn" {
   description = "ARN of the DO Spaces keys secret"
   value       = var.use_digitalocean_spaces ? aws_secretsmanager_secret.do_spaces_keys[0].arn : ""
 }
-]]>

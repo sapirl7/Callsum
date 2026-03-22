@@ -1,4 +1,4 @@
-<![CDATA[# 📚 Callsum — Full Deployment Guide
+# 📚 Callsum — Full Deployment Guide
 
 > This is the primary detailed deployment guide.
 > For client handoff, supplement with `docs/HANDOFF_CHECKLIST.md` and `docs/PROJECT_STATUS.md`.
@@ -441,4 +441,3 @@ Your Callsum instance is deployed and ready!
 **Cost:** ~$10–15/month at 60 hours of audio
 **Processing time:** ~20 minutes per 1 hour of audio
 **Security:** ✅ Encryption, ✅ Isolation, ✅ Least privilege
-]]>

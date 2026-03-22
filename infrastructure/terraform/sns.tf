@@ -1,4 +1,4 @@
-<![CDATA[# SNS Topic for CloudWatch alarms and notifications
+# SNS Topic for CloudWatch alarms and notifications
 
 resource "aws_sns_topic" "alerts" {
   name         = "${local.project_name}-alerts-${var.environment}"
@@ -43,4 +43,3 @@ output "sns_topic_arn" {
   description = "ARN of the alerts SNS topic"
   value       = aws_sns_topic.alerts.arn
 }
-]]>

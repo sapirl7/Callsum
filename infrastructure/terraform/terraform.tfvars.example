@@ -1,4 +1,4 @@
-<![CDATA[# Terraform Variables Example
+# Terraform Variables Example
 # Copy this file to terraform.tfvars and fill in the values
 
 # === REQUIRED PARAMETERS ===
@@ -84,4 +84,3 @@ s3_secret_key = "YOUR_DO_SPACES_SECRET_KEY"
 # 6. Copy Access Key and Secret Key into the variables above
 # 7. Set use_digitalocean_spaces = true
 # 8. Run terraform apply
-]]>

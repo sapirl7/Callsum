@@ -1,4 +1,4 @@
-<![CDATA[# IAM Roles and Policies for Lambda functions
+# IAM Roles and Policies for Lambda functions
 
 # IAM Role for Telegram Bot Lambda
 resource "aws_iam_role" "lambda_telegram_bot" {
@@ -91,4 +91,3 @@ output "lambda_role_arn" {
   description = "ARN of the Lambda IAM role"
   value       = aws_iam_role.lambda_telegram_bot.arn
 }
-]]>

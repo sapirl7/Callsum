@@ -1,4 +1,4 @@
-<![CDATA[# Handoff Checklist
+# Handoff Checklist
 
 Last updated: March 22, 2026
 
@@ -93,4 +93,3 @@ This checklist is intended for the final project handoff to the client.
 - There is one verified smoke test.
 - All secrets are removed from the repository.
 - A specific commit/tag and list of external resources have been delivered.
-]]>

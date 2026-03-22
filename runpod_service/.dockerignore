@@ -1,4 +1,4 @@
-<![CDATA[# Documentation
+# Documentation
 docs/
 *.md
 
@@ -31,4 +31,3 @@ __pycache__/
 # Build artifacts
 telegram_bot/
 presentation.html
-]]>

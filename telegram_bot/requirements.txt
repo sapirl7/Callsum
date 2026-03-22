@@ -1,4 +1,4 @@
-<![CDATA[# Telegram Bot
+# Telegram Bot
 python-telegram-bot==20.7
 
 # AWS SDK
@@ -9,4 +9,3 @@ httpx==0.26.0
 
 # Utilities
 python-dotenv==1.0.0
-]]>

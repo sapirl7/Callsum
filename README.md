@@ -1,4 +1,4 @@
-<![CDATA[# 🎙️ Callsum — AI Call Summarizer
+# 🎙️ Callsum — AI Call Summarizer
 
 > Turn any voice recording into structured meeting notes with speaker diarization in minutes.
 
@@ -99,7 +99,8 @@ callsum/
     ├── CONFIGURATION.md       # All environment variables
     ├── API.md                 # Webhook & callback contracts
     ├── HANDOFF_CHECKLIST.md   # Deployment checklist
-    └── PROJECT_STATUS.md      # Current status
+    ├── PROJECT_STATUS.md      # Current status
+    └── PUBLISH_READINESS_REPORT.md
 ```
 
 ---
@@ -200,4 +201,3 @@ MIT — see [LICENSE](LICENSE) for details.
 - [Meta Llama 3.1](https://ai.meta.com/llama/) — text summarization
 - [RunPod](https://runpod.io) — serverless GPU infrastructure
 - [vLLM](https://github.com/vllm-project/vllm) — high-throughput LLM serving
-]]>

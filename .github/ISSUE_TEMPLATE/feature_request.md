@@ -1,4 +1,4 @@
-<![CDATA[---
+---
 name: Feature Request
 about: Suggest a new feature or improvement
 title: "[FEATURE] "
@@ -21,4 +21,3 @@ Any alternative approaches you've considered.
 ## Additional Context
 
 Any other context, screenshots, or references.
-]]>

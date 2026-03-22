@@ -1,4 +1,4 @@
-<![CDATA[# Ignore local secrets
+# Ignore local secrets
 .env
 .env.*
 
@@ -49,4 +49,3 @@ coverage.xml
 # Distribution
 dist/
 *.egg-info/
-]]>

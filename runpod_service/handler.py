@@ -1,4 +1,4 @@
-<![CDATA[# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 RunPod Serverless Handler - audio processing via ML models.
 Performs transcription, diarization, and summary generation.
@@ -512,4 +512,3 @@ runpod_handler = handler
 
 if __name__ == "__main__":
     runpod.serverless.start({"handler": handler})
-]]>

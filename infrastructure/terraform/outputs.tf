@@ -1,4 +1,4 @@
-<![CDATA[# Terraform Outputs - deployment summary
+# Terraform Outputs - deployment summary
 
 output "summary" {
   description = "Deployed infrastructure summary"
@@ -61,4 +61,3 @@ output "next_steps" {
 
   EOT
 }
-]]>
