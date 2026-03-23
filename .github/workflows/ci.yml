@@ -24,10 +24,10 @@ jobs:
         run: pip install ruff
 
       - name: Ruff check
-        run: ruff check telegram_bot/ runpod_service/ test_*.py
+        run: ruff check telegram_bot/ runpod_service/ tests/ test_*.py
 
       - name: Ruff format check
-        run: ruff format --check telegram_bot/ runpod_service/ test_*.py
+        run: ruff format --check telegram_bot/ runpod_service/ tests/ test_*.py
 
   test:
     name: Tests
@@ -44,6 +44,9 @@ jobs:
 
       - name: Run contract tests
         run: python -m pytest test_deployment_contracts.py -v
+
+      - name: Run unit tests
+        run: python -m pytest tests/ -v
 
   terraform:
     name: Terraform Validate

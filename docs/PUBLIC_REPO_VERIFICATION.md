@@ -38,7 +38,7 @@
 
 These are not blockers but are worth noting:
 
-- **No comprehensive test suite exists.** Only lightweight contract checks are present (`test_deployment_contracts.py`, wired into the CI `test` job). No unit or integration tests cover the bot or ML handler logic.
+- **Unit test suite covers pure logic (85 tests).** Tests cover config validation, message splitting, audio extension detection, processing time estimation, env parsing, header lookup, event body parsing, runtime validation, speaker-word alignment, dialogue formatting, callback headers, system prompt integrity, and handler error paths. No integration or end-to-end tests exist.
 - **No formal release/versioning process.** The project does not use tags or semantic versioning. This is fine for its current maturity.
 - **`.vscode/settings.json` is tracked.** Contains only `python.defaultInterpreterPath`. Harmless but unnecessary for public consumption.
 
