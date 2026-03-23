@@ -1,9 +1,9 @@
 # ML Models
-torch==2.3.1
+torch==2.8.0
 faster-whisper==0.10.0
 pyannote.audio==3.1.1
-vllm==0.6.3
-transformers==4.45.0
+vllm==0.14.1
+transformers==4.53.0
 
 # RunPod SDK
 runpod==1.5.0
