@@ -6,7 +6,7 @@ vllm==0.6.3
 transformers==4.45.0
 
 # RunPod SDK
-runpod==1.5.0
+runpod==1.8.1
 
 # HTTP Client
 httpx==0.26.0
